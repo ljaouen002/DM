@@ -31,23 +31,42 @@ MethodeRes::MethodeRes()
 MethodeRes::~MethodeRes()
 {}
 
-MethodeRes::void calcul_residu(Eigen::VectorXd x0, Eigen::VectorXd b, Eigen::MatrixXd A)
+// Calcul du résidu
+MethodeRes::void calcul_residu(Eigen::VectorXd x, Eigen::VectorXd b, Eigen::MatrixXd A)
 {
   double residu;
-  residu = b-A*x0 ;
+  residu = b-A*x ;
 }
 
-Jacobi::Jacobi(double r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0)
+Jacobi::Jacobi(Eigen::VectorXd r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0, Eigen::VextorXd x)
 {
   _r=r;
   _A=A;
   _b=b;
   _x0=x0;
+  _x=x;
 }
 
 void Jacobi::Initialisation()
 {
-  _r=calcul_residu(_x0,_b,_A)
+  _r(0)=calcul_residu(_x0,_b,_A)
+}
+
+void Jacobi::calcul_x()
+{
+  double eps(0.0001);
+  int k(0); k_max(100);
+  while (norme(_r)>eps && k<=k_max)
+  {
+    k+=1
+    _x(k)=calcul_xk(Eigen::MatrixXd _A, Eigen::VectorXd _b)
+    _r(k)=calcul_residu(Eigen::VectorXd _x, Eigen::VectorXd _b, Eigen::MatrixXd _A);
+  }
+  cout << _x << endl;
+  if (k>k_max)
+  {
+    cout << "Tolérance non atteinte :" << norme(_r) << endl;
+  }
 }
 
 #define _METHODE_RES_CPP
