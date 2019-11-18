@@ -24,7 +24,7 @@ class MethodeRes
 class Jacobi : public MethodeRes
 {
   public:
-    Jacobi(double r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0);
+    Jacobi(double r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0, Eigen::VextorXd x);
     void Initialisation(double r);
     void calcul_x();
 };
