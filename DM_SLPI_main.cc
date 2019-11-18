@@ -8,6 +8,6 @@ using namespace Eigen;
 
 int main()
 {
-
+	double a;
 	return 0;
 }
