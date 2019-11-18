@@ -37,6 +37,18 @@ MethodeRes::void calcul_residu(Eigen::VectorXd x0, Eigen::VectorXd b, Eigen::Mat
   residu = b-A*x0 ;
 }
 
+Jacobi::Jacobi(double r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0)
+{
+  _r=r;
+  _A=A;
+  _b=b;
+  _x0=x0;
+}
+
+void Jacobi::Initialisation()
+{
+  _r=calcul_residu(_x0,_b,_A)
+}
 
 #define _METHODE_RES_CPP
 #endif
