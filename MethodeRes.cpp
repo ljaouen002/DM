@@ -11,10 +11,20 @@ MethodeRes::MethodeRes()
 {
   Eigen::MatrixXd A;
   Eigen::MatrixXd B;
+  EIgen::MatrixXd I;
   double alpha(0.1);
 
-  A.resize(10); B.resize(10);
-  B=
+  A.resize(10); B.resize(10); I.resize(10);
+  
+  for (int i=0 ; i<B.size() ; i++)
+  {
+    for (int j=0 ; j<B.size() ; j++)
+    {
+      I(i,i)=1.;
+      B(i,j)=rand();
+    }
+  }
+  A=alpha*I+B.transpose()*B;
 }
 
 // Destructeur par défaut
