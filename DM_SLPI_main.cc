@@ -11,58 +11,106 @@ int main()
 	int nb_iterations(100);
 	int N(10), k(0), k_max(100);
 	double eps(0.0001);
-  	SparseMatrix Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
-	SparseVector sol(N);
-  	double alpha(0.1);
-	
-	// Définition d'un pointeur de MethodeRes
-	MethodeRes* methode = new Jacobi(); 
-	// Nom du fichier solution
-	string results = "solution.txt";
+	SparseMatrix<double> Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
+	SparseVector<double> sol(N), sol0(N);
+	double alpha(0.1);
+	SparseVector<double> r;
+	int userchoicemethode;
 
-	// Définition des matrices à utiliser
-  	A.setZero(A.rows(),A.cols()); E.setZero(A.rows(),A.cols()); F.setZero(A.rows(),A.cols());
-  
-  	Id = MatrixXd::Identity(10,10);    //Matrice Identité
+	// Définition des matrices à utiliser globalement
+	A.setZero(A.rows(),A.cols());
+
+	Id = MatrixXd::Identity(10,10);    //Matrice Identité
 	B=MatrixXd::Random(10,10);        //Matrice random B
-  	A=alpha*I+B.transpose()*B;        //Matrice A
-  
-  	D=diag(A);   // Diagonale de A
-	for (int i=0 ; i<A.rows() ; i++)
+	//Lisa: Ce que je comprends du sujet, c'est que la matrice  ne doit contenir que des valeurs égale à 0 ou à 1, pas entre les deux.
+	A=alpha*Id+B.transpose()*B;        //Matrice A
+
+
+	cout << "------------------------------------" << endl;
+	cout << "Choississez la méthode de résolution : " << endl;
+	cout << "1) Jacobi"<< endl;
+	cout << "2) Gradient Pas Optimal" << endl;
+	cout << "3) Résidu Minimum" << endl;
+	cout << "4) GMRes" << endl;
+	//cin >> userchoicemethode;
+	userchoicemethode=1;
+	MethodeRes* methode(0);
+
+	switch(userchoicemethode)
 	{
-		for (int j=0 ; j<A.cols() ; j++)
+
+		case 1: //Jacobi
+		// Définition d'un pointeur de MethodeRes
+
+		MethodeRes* methode = new Jacobi(r, sol);
+		//Lisa: Pour moi il y a un problème de déclaration dans les variables de ta classe. Tu ne peux pas utiliser E, D et F dans ton constrcteur et dans ta classe sans le déclarer comme variable ptroctected. Donc pour moi, il faudrait mettre la ligne 52 à 67 dans la fonction initialized
+
+		//Décalration des variables à l'intérieure du constrcteur, DONNER VALEUR
+
+		// Nom du fichier solution
+		string results = "solution_Jacobi.txt";
+
+		E.setZero(A.rows(),A.cols());
+		F.setZero(A.rows(),A.cols());
+
+		// Définition des matrices à utiliser dans le cas de Jacobi
+		D=diag(A);   // Diagonale de A, ne compire pas, retrouver fonction appropriée pour diagonale
+		for (int i=0 ; i<A.rows() ; i++)
 		{
-			if (i<j)
+			for (int j=0 ; j<A.cols() ; j++)
 			{
-				E=-A(i,j);     // Partie triangulaire supérieure de A
-			}
-			else if (i>j)
-			{
-				F=-A(i,j);     // Partie triangulaire inférieure de A
+				if (i<j)
+				{
+					E=-A(i,j);     // Partie triangulaire supérieure de A
+				}
+				else if (i>j)
+				{
+					F=-A(i,j);     // Partie triangulaire inférieure de A
+				}
 			}
 		}
+		break;
+
+
+		case 2: //GPO
+
+		break;
+
+
+		case 3: //Résidu
+
+		double alpha;
+		MethodeRes* methode = new Residu(alpha, r);
+
+		string results = "solution_Residu.txt";
+		break;
+
+
+		default:
+		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
+		exit(0);
 	}
-	
-	// Initialisation
+
+	// Initialisations
 	methode->Initialisation(b,A,sol0,methode);
+
 	// On sauvegarde la solution
 	methode->SaveSolution(nb_iterations);
-	
+
 	//Faire une boucle pour trace la norme de _r en fonction de nb_iterations ????
-	
-	// Algorithme de Jacobi
-	 while (_r.norm()>eps || k<=k_max)
- 	 {
-   		k+=1
-		methode->calcul_sol(Eigen::SparseVector b, Eigen::SparseMatrix A);   //Appel de la fonction Jacobi
-	 }
-	 //cout << _sol << endl;
-  	if (k>k_max)
-  	{
-    	cout << "Tolérance non atteinte :" << _r.norm() << endl;
-  	}
-	
-		
+	while (r.norm()>eps || k<=k_max)
+	{
+		methode->calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);   //Appel de la fonction solution
+		methode->SaveSolution(k);
+		k+=1;
+	}
+	//cout << _sol << endl;
+	if (k>k_max)
+	{
+		cout << "Tolérance non atteinte :" << r.norm() << endl;
+	}
+
+
 	delete methode;
 	return 0;
 }
