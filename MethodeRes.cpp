@@ -7,12 +7,26 @@ using namespace Eigen;
 using namespace std;
 
 // Constructeur par défaut
-MethodeRes::MethodeRes()
+MethodeRes::MethodeRes(): _solution(0)
 {}
 
 // Destructeur par défaut
 MethodeRes::~MethodeRes()
 {}
+
+// Initialisation de vos différentes variables
+void MethodeRes::Initialisation(Eigen::SparseVector b, Eigen::SparseMatrix A, Eigen::SparseVextor sol0, MethodeRes* methode)
+{
+  _A=A.
+  _b=b;
+  _sol0 = sol0;
+  _sol = sol0;
+  _methode = methode;
+  if (results.size() > 0)
+  {
+    _methode->InitializeFileName(results);
+  }
+}
 
 Jacobi::Jacobi(Eigen::SparseVector r,Eigen::SparseVextor sol, Eigen::SparseMatrix D, Eigen::SparseMatrix E, Eigen::SparseMatrix F)
 {
@@ -29,20 +43,17 @@ void Jacobi::Initialisation(Eigen::SparseVector b, Eigen::SparseMatrix A, Eigen:
 
 void Jacobi::calcul_sol(Eigen::SparseVector b, Eigen::SparseMatrix A)
 {
-  double eps(0.0001);
-  int k(0); k_max(100);
-  while (_r.norm()>eps || k<=k_max)
-  {
-    k+=1
-    _sol=M*_N*_sol+M*b
-    _r=b-A*_sol;
-  }
-  //cout << _sol << endl;
-  if (k>k_max)
-  {
-    cout << "Tolérance non atteinte :" << _r.norm() << endl;
-  }
+  _sol=_M*_N*_sol+M*b; //Changer _M par _M^-1
+  _r=b-A*_sol;
 }
+
+void MethodeRes::SaveSolution(const int nb_iterations) //reste à déterminer ce qu'on trace
+{
+  _file_out << nb_iterations;
+  _file_out << " " << _r.norm();
+  _file_out << std::endl;
+}
+
 
 #define _METHODE_RES_CPP
 #endif
