@@ -8,64 +8,39 @@ using namespace std;
 
 // Constructeur par défaut
 MethodeRes::MethodeRes()
-{
-  Eigen::MatrixXd A;
-  Eigen::MatrixXd B;
-  EIgen::MatrixXd I;
-  double alpha(0.1);
-
-  A.resize(10); B.resize(10); I.resize(10);
-  
-  for (int i=0 ; i<B.size() ; i++)
-  {
-    for (int j=0 ; j<B.size() ; j++)
-    {
-      I(i,i)=1.;
-      B(i,j)=rand();
-    }
-  }
-  A=alpha*I+B.transpose()*B;
-}
+{}
 
 // Destructeur par défaut
 MethodeRes::~MethodeRes()
 {}
 
-// Calcul du résidu
-MethodeRes::void calcul_residu(Eigen::VectorXd x, Eigen::VectorXd b, Eigen::MatrixXd A)
-{
-  double residu;
-  residu = b-A*x ;
-}
-
-Jacobi::Jacobi(Eigen::VectorXd r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0, Eigen::VextorXd x)
+Jacobi::Jacobi(Eigen::SparseVector r,Eigen::SparseVextor sol, Eigen::SparseMatrix D, Eigen::SparseMatrix E, Eigen::SparseMatrix F)
 {
   _r=r;
-  _A=A;
-  _b=b;
-  _x0=x0;
-  _x=x;
+  _sol=sol;
+  _M=D;
+  _N=E+F;
 }
 
-void Jacobi::Initialisation()
+void Jacobi::Initialisation(Eigen::SparseVector b, Eigen::SparseMatrix A, Eigen::SparseVector sol0, Eigen::SparseMatrix E, Eigen::SparseMatrix F)
 {
-  _r(0)=calcul_residu(_x0,_b,_A)
+  _r=b-A*sol0;
 }
 
-void Jacobi::calcul_x()
+void Jacobi::calcul_sol(Eigen::SparseVector b, Eigen::SparseMatrix A)
 {
   double eps(0.0001);
   int k(0); k_max(100);
-  while (norme(_r)>eps && k<=k_max)
+  while (_r.norm()>eps || k<=k_max)
   {
     k+=1
-    _x(k)=calcul_xk(Eigen::MatrixXd _A, Eigen::VectorXd _b)
-    _r(k)=calcul_residu(Eigen::VectorXd _x, Eigen::VectorXd _b, Eigen::MatrixXd _A);
+    _sol=M*_N*_sol+M*b
+    _r=b-A*_sol;
   }
-  cout << _x << endl;
+  //cout << _sol << endl;
   if (k>k_max)
   {
-    cout << "Tolérance non atteinte :" << norme(_r) << endl;
+    cout << "Tolérance non atteinte :" << _r.norm() << endl;
   }
 }
 
