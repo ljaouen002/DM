@@ -10,23 +10,24 @@ class MethodeRes
     MethodeRes();
     // Destructeur par défaut
     virtual ~MethodeRes();
-    // Calcul du résidu
-    void calcul_residu(Eigen::VectorXd x0, Eigen::VectorXd b, Eigen::MatrixXd A);
-    // Calcul de xk avec Cholesky
-    void calcul_xk(Eigen::MatrixXd A, Eigen::VectorXd b);
     // Initialisation
-    virtual void Initialisation(double r, int k) =0;
+    virtual void Initialisation(Eigen::SparseVector b, Eigen::SparseMatrix A, Eigen::SparseVextor sol0) =0;
     // Calcul de x
-    virtual void calcul_x() =0;
+    virtual void calcul_sol() =0;
 };
 
-// Classe fille publique d’OdeSystem
+// Classe fille publique de MethodeRes
 class Jacobi : public MethodeRes
 {
+  private:
+    Eigen::SparseVector _r;
+    Eigen::SparseVector _sol;
+    Eigen::SparseMatrix _M;
+    Eigen::SparseMatrix _N;
   public:
-    Jacobi(double r, Eigen::MatrixXd A, Eigen::VectorXd b, Eigen::VextorXd x0, Eigen::VextorXd x);
-    void Initialisation(double r);
-    void calcul_x();
+    Jacobi(Eigen::SparseVector<double> r, Eigen::SparseVector<double> sol);
+    void Initialisation(Eigen::SparseVector b, Eigen::SparseMatrix A, Eigen::SparseVextor sol0, Eigen::SparseMatrix D, Eigen::SparseMatrix E, Eigen::SparseMatrix F);
+    void calcul_sol(Eigen::SparseVector b, Eigen::SparseMatrix A);
 };
 
 
