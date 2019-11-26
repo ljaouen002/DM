@@ -64,9 +64,36 @@ void Jacobi::calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<doubl
 
 
 
+GPO::GPO(double alpha, Eigen::SparseVector<double> r)
+{
+  _r=r;
+   _alpha =alpha;
+}
+
+void GPO::Initialisation(double alpha, Eigen::SparseVector<double> r
+{
+  _r=b-_A*_sol0;
+}
+
+void GPO::calcul_sol(Eigen::SparseMatrix<double> A, SparseVector<double> r, SparseVector<double> sol, double alpha)
+{
+
+  SparseVector<double> z;
+
+  z = _A * _r;
+  _alpha = _r.dot(_r)/z.dot(_r);
+  _sol= _sol + _alpha*_r;
+  _r= _r - _alpha* z;
+}
+
+
+
+
+
+
 Residu :: Residu(double alpha, Eigen::SparseVector<double> r)
-{_r=r;
-  _alpha =alpha
+{ _r=r;
+  _alpha =alpha;
 }
 
 void Residu :: Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, SparseVector<double> r);
@@ -74,12 +101,14 @@ void Residu :: Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix
     _r=b-_A*_sol0;
 }
 
-void Residu :: calcul_sol(Eigen::SparseVector<double> q, Eigen::SparseMatrix<double> A, double alpha, SparseVector<double> r, SparseVector<double> z)
+void Residu :: calcul_sol(Eigen::SparseMatrix<double> A, SparseVector<double> r, SparseVector<double> sol, double alpha)
 {
+
+   SparseVector<double> z;
   z = _A * _r;
   _alpha = _r.dot(z)/z.dot(z);
   _sol= _sol + _alpha*_r;
-  _r=b-_A*_sol;
+  _r= _r - _alpha* z;
 }
 
 

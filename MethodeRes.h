@@ -48,6 +48,22 @@ class Jacobi : public MethodeRes
 
 
 // Classe fille publique de MethodeRes
+class GPO: public MethodeRes
+{
+  private:
+    double _alpha; //coefficient de descente
+    Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
+
+  public:
+    //constructeur
+    GPO(double alpha, Eigen::SparseVector<double> r);
+    void Initialisation(double alpha, Eigen::SparseVector<double> r);
+    void calcul_sol(Eigen::SparseMatrix<double> A, SparseVector<double> r, SparseVector<double> sol, double alpha);
+};
+
+
+
+// Classe fille publique de MethodeRes
 class Residu : public MethodeRes
 {
   private:
