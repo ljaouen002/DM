@@ -1,1 +1,1 @@
-// void norme(Eigen::VectorXd x)
+void norme(Eigen::VectorXd x)
