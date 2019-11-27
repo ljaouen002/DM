@@ -10,6 +10,7 @@ class OdeSystem
     Eigen::VectorXd _f;
     // Écriture du fichier
     std::ofstream _file_out;
+    
   public:
     // Constructeur par défaut
     OdeSystem();

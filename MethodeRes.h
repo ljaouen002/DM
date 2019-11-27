@@ -9,6 +9,8 @@ class MethodeRes
   protected:
     Eigen::SparseMatrix<double> _A;
     Eigen::SparseVector<double> _b;
+    Eigen::SparseVector<double> _r;
+    //int _N; //taille de la matrice
     // Écriture du fichier
     std::ofstream _file_out;
     // Vecteur initial et vecteur solution
@@ -22,7 +24,7 @@ class MethodeRes
     // Initialiser le nom du fichier solution
     void InitializeFileName(const std::string file_name);
     // Initialisation
-    virtual void Initialisation(int N, Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, std::string results, MethodeRes* methode);
+    virtual void Initialisation(int N, Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0)=0; //, std::string results, MethodeRes* methode)=0;
     // Calcul de x
     virtual void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A) =0;
     // Remplissage de la solution
@@ -33,13 +35,13 @@ class MethodeRes
 class Jacobi : public MethodeRes
 {
   private:
-    Eigen::SparseVector<double> _r;
+    //Eigen::SparseVector<double> _r;
     //Eigen::SparseVector<double> _sol; //Lisa: Pour moi sol est déjà déclaré dans la classe mère
     Eigen::SparseMatrix<double> _M, _N, _D, _E, _F;
 
   public:
     //constructeur
-    Jacobi(Eigen::SparseVector<double> r, Eigen::SparseVector<double> sol);
+    Jacobi(); //Pour moi il faudrait définir M, N, D, E et F dans le constructeur
     void Initialisation(int N, Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0);
     void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
 };
@@ -51,12 +53,12 @@ class Residu : public MethodeRes
 {
   private:
     double _alpha; //coefficient de descente
-    Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
+    //Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
 
   public:
     //constructeur
-    Residu(double alpha, Eigen::SparseVector<double> r);
+    Residu(double alpha);
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0);
     void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
 };
@@ -66,15 +68,33 @@ class GPO : public MethodeRes
 {
   private:
     double _alpha; //coefficient de descente
-    Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
+    //Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
 
   public:
     //constructeur
-    GPO(double alpha, Eigen::SparseVector<double> r);
+    GPO(double alpha);
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0);
     void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
 };
+
+
+class GMRes : public MethodeRes
+{
+  private:
+    double _beta;
+    //Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
+    //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
+
+  public:
+    //constructeur
+    GMRes(double beta);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, double beta);
+    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A);
+    void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
+};
+
+
 
 /*
 // Classe fille publique d’OdeSystem

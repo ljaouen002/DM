@@ -16,7 +16,7 @@ int main()
 	double eps(0.0001);
 	SparseMatrix<double> Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
 	SparseVector<double> sol(N), sol0(N), b(N);
-	double alpha(0.1);
+	double alpha_sujet(0.1);
 	SparseVector<double> r;
 	int userchoicemethode;
 	string results;
@@ -26,7 +26,7 @@ int main()
 	Id=MatrixXd::Identity(N,N);    //Matrice Identité
 	B.setRandom(B.rows(),B.cols());        //Matrice random B
 	//Lisa: Ce que je comprends du sujet, c'est que la matrice  ne doit contenir que des valeurs égale à 0 ou à 1, pas entre les deux.
-	A=alpha*Id+B.transpose()*B;        //Matrice A
+	A=alpha_sujet*Id+B.transpose()*B;        //Matrice A
 
 
 	cout << "------------------------------------" << endl;
@@ -37,32 +37,37 @@ int main()
 	cout << "4) GMRes" << endl;
 	cin >> userchoicemethode;
 	//userchoicemethode=1;
+
 	MethodeRes* methode(0);
 
 	switch(userchoicemethode)
 	{
 
 		case 1: //Jacobi
-			methode = new Jacobi(r, sol);
+			methode = new Jacobi();
 			// Nom du fichier solution
 			results = "solution_Jacobi.txt";
 		break;
 
 
 		case 2: //GPO
-			methode = new Jacobi(r, sol);
+			double alpha; //Attention, alpha ici est le coefficient de descente, différent du alpha précédent de l'énoncé
+			methode = new Jacobi(alpha);
 			results = "solution_GPO";
 		break;
 
 
 		case 3: //Résidu
-
-			double alpha; // Il va y avoir un problème car il y a déjà le alpha dans la matrice A
-			methode = new Residu(alpha, r);
-
+			double alpha;
+			methode = new Residu(alpha);
 			results = "solution_Residu.txt";
 		break;
 
+		case 4: //GMRes
+			//double beta;
+			//methode = new GMRes(beta);
+			//results = "solution_GMRes.txt";
+		break;
 
 		default:
 		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
