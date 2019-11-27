@@ -83,14 +83,16 @@ class GMRes : public MethodeRes
 {
   private:
     double _beta;
+
     //Eigen::SparseVector<double> _r; // direction de descente, comme méthode de gradient, r=d
-    //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
+    //Eigen::SparseMatrix<double> _H;
+    //Eigen::SparseMatrix<double> _v_arno; //Matrice préconditionnement, dans question 3
 
   public:
     //constructeur
     GMRes(double beta);
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, double beta);
-    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A);
+    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double>  H);
     void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
 };
 

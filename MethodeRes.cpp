@@ -157,12 +157,13 @@ MethodeRes::MethodeRes()
       _beta = _r.norm();
     }
 
-    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A)
+    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double>  H)
     {
+      //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
+      v_arno.resize(N,N);
+      H.resize(N,N);
 
       //definition des vecteurs et matrices locaux utilisés:
-      SparseMatrix<double> v_arno(N,N); //v_arno est une matrice qui repertorie les N vecteur orthogonalisés v
-      SparseMatrix<double>  H(N,N); //contient les normes d'orthogonalisation aux différents indices
       SparseVector<double> wj(N); // Produit matrice vecteur A*vj, économiser des opérations
       SparseVector<double> vi(N); // Vecteur vi, économiser des opérations
       SparseVector<double> zj(N);
