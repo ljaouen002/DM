@@ -1,4 +1,3 @@
-//#include "Fonctions.h"
 #include "MethodeRes.h"
 #include <string>
 #include <iostream>
@@ -11,33 +10,27 @@ using namespace Eigen;
 
 int main()
 {
-	int nb_iterations(100);
 	int N(10), k(0), k_max(100);
-	double eps(0.0001);
-	SparseMatrix<double> Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
-	SparseVector<double> sol(N), sol0(N), b(N);
-	double a(0.1);
-	SparseVector<double> r;
+	double eps(0.0001), a(0.1);
+	MatrixXd Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
+	VectorXd b(N), sol0(N), sol(N), r(N);
 	int userchoicemethode;
 	string results;
 
 	// Définition des matrices à utiliser globalement
-
-	Id=MatrixXd::Identity(N,N);    //Matrice Identité
-	B.setRandom(B.rows(),B.cols());        //Matrice random B
-	//Lisa: Ce que je comprends du sujet, c'est que la matrice  ne doit contenir que des valeurs égale à 0 ou à 1, pas entre les deux.
-	A=a*Id+B.transpose()*B;        //Matrice A
-	sol0=VectorXd::Random(sol0.rows()); //Définir un valeur de sol0
-	r=b-A*sol0; //Initialisation de r
+	Id=MatrixXd::Identity(N,N);                //Matrice Identité
+	B=MatrixXd::Random(B.rows(),B.cols());     //Matrice random B
+	A=a*Id+B.transpose()*B;                    //Matrice A
+	sol0=VectorXd::Random(sol0.rows());        //Définir un valeur de sol0
+	r=b-A*sol0;                                //Initialisation de r
 
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
 	cout << "1) Jacobi"<< endl;
-	cout << "2) Gradient à Pas Optimal" << endl;
+	cout << "2) Gradient Pas Optimal" << endl;
 	cout << "3) Résidu Minimum" << endl;
-	cout << "4) GMRes" << endl;
+	//cout << "4) GMRes" << endl;
 	cin >> userchoicemethode;
-	//userchoicemethode=1;
 
 	MethodeRes* methode(0);
 
@@ -45,46 +38,41 @@ int main()
 	{
 
 		case 1: //Jacobi
-			methode = new Jacobi(r,sol0);
-			// Nom du fichier solution
-			results = "solution_Jacobi.txt";
+			methode = new Jacobi();
+			results = "solution_Jacobi.txt";    // Nom du fichier solution
 		break;
 
 
 		case 2: //GPO
-			double alpha; //Attention, alpha ici est le coefficient de descente, différent du alpha précédent de l'énoncé
-			methode = new GPO(alpha,r);
-			results = "solution_GPO";
+			methode = new GPO();
+			results = "solution_GPO";           // Nom du fichier solution
 		break;
 
 
 		case 3: //Résidu
-			double alpha;
-			methode = new Residu(alpha,r);
-			results = "solution_Residu.txt";
+			methode = new Residu();
+			results = "solution_Residu.txt";    // Nom du fichier solution
 		break;
 
-		case 4: //GMRes
-			//double beta;
-			//methode = new GMRes(beta,r);
-			//results = "solution_GMRes.txt";
-		break;
+		/*case 4: //GMRes
+			methode = new GMRes(beta);
+			results = "solution_GMRes.txt";    // Nom du fichier solution
+		break;*/
 
 		default:
-		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
-		exit(0);
+			cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
+			exit(0);
 	}
 
 	// Initialisations
-	methode->Initialisation(b,A,sol0,methode);
+	methode->Initialisation(b,A,sol0,r,results,methode);
 
 	// On sauvegarde la solution
 	methode->SaveSolution(0);
 
-	//Faire une boucle pour trace la norme de _r en fonction de nb_iterations ????
 	while (r.norm()>eps || k<=k_max)
 	{
-		methode->calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);   //Appel de la fonction solution
+		methode->calcul_sol();   //Appel de la fonction solution
 		methode->SaveSolution(k);
 		k+=1;
 	}
@@ -93,7 +81,6 @@ int main()
 	{
 		cout << "Tolérance non atteinte :" << r.norm() << endl;
 	}
-
 
 	delete methode;
 	return 0;
