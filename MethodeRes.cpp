@@ -153,13 +153,13 @@ GMRes :: GMRes(double beta, Eigen::SparseVector<double> r)
   _beta=beta;
 }
 
-void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, double beta)
+void GMRes::Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, double beta)
 {
   _r=_b-_A*_sol0;
   _beta = _r.norm();
 }
 
-void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double>  H)
+void GMRes::Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double>  H)
 {
   //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
   v_arno.resize(N,N);
@@ -206,7 +206,7 @@ void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A
 }
 
 
-void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A)
+void GMRes::calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A)
 {}
 
 
