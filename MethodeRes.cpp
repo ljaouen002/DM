@@ -17,18 +17,19 @@ MethodeRes::~MethodeRes()
 {}
 
 // Initialisation du nom du fichier
-void MethodeRes::InitializeFileName(const std::string file_name)
+void MethodeRes::InitializeFileName(const string file_name)
 {
   _file_out.open(file_name);
 }
 
 // Initialisation de vos différentes variables
-void MethodeRes::Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, std::string results, MethodeRes* methode)
+void MethodeRes::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0, VectorXd r,string results, MethodeRes* methode)
 {
   _A=A;
   _b=b;
   _sol0=sol0;
   _sol=sol0;
+  _r=r;
   _methode=methode;
 
   if (results.size() > 0)
@@ -48,118 +49,106 @@ void MethodeRes::SaveSolution(const int nb_iterations) //reste à déterminer ce
 
 //Méthode de Jacobi
 
-Jacobi::Jacobi(Eigen::SparseVector<double> r,Eigen::SparseVector<double> sol)
-{
-  _r=r;
-  _sol=sol;
-}
-
-void Jacobi::Initialisation(int N, Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0)
+Jacobi::Jacobi()
 {
   _D.setZero(_D.rows(),_D.cols());
   _E.setZero(_E.rows(),_E.cols());
   _F.setZero(_F.rows(),_F.cols());
   _M.setZero(_M.rows(),_M.cols());
   _N.setZero(_N.rows(),_N.cols());
-  
+
   // Définition des matrices à utiliser dans le cas de Jacobi
   _D=_A.diagonal();   // Diagonale de A
 
   //Création de M=D^-1
-  for (int i=0, i<_D.rows() ; i++)
+  for (int i=0 ; i<_D.rows() ; ++i)
   {
-    _M=1/-D(i,i);
+    _M(i,i)=1/_D(i,i);
   }
 
-  for (int i=0 ; i<_A.rows() ; i++)
+  //Création de E et F
+  for (int i=0 ; i<_A.rows() ; ++i)
   {
-    for (int j=0 ; j<_A.cols() ; j++)
+    for (int j=0 ; j<_A.cols() ; ++j)
     {
       if (i<j)
       {
-        _E=-_A(i,j);     // Partie triangulaire supérieure de A
+        _E(i,j)=-_A(i,j);     // Partie triangulaire supérieure de A
       }
       else if (i>j)
       {
-        _F=-_A(i,j);     // Partie triangulaire inférieure de A
+        _F(i,j)=-_A(i,j);     // Partie triangulaire inférieure de A
       }
     }
   }
   _N=_E+_F;
 
-  _r=_b-_A*_sol0
-}
-
-void Jacobi::calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A)
-{
-  _sol=_M*_N*_sol+_M*_b; //Changer _M par _M^-1
-  _r=_b-_A*_sol;
-}
-
-
-//Méthode du résidu minimum
-
-Residu :: Residu(double alpha, Eigen::SparseVector<double> r)
-{
-  _r=r;
-  _alpha =alpha;
-}
-
-void Residu :: Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, SparseVector<double> r)
-{
   _r=_b-_A*_sol0;
 }
 
-
-void Residu :: calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A /*double alpha, SparseVector<double> r,*/ )
+void Jacobi::calcul_sol()
 {
-  SparseVector<double> z;
-  z = _A * _r;
-  _alpha = _r.dot(z)/z.dot(z);
-  _sol= _sol + _alpha*_r;
+  _sol=_M*_N*_sol+_M*_b;
   _r=_b-_A*_sol;
 }
 
 
 //Méthode du GPO
 
-GPO :: GPO(double alpha, Eigen::SparseVector<double> r)
+GPO::GPO()
 {
-  _r=r;
-  _alpha =alpha;
+  _r=_b-_A*_sol0;
 }
 
-void GPO :: Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, SparseVector<double> r)
+void GPO :: calcul_sol()
 {
-  _r=b-_A*_sol0;
-}
+  VectorXd _z;
+  double _alpha;
 
-
-void GPO :: calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, /*double alpha, SparseVector<double> r,*/)
-{
-  SparseVector<double> z;
-  z = _A * _r;
-  _alpha = _r.dot(_r)/z.dot(_r);
+  _z = _A *_r;
+  _alpha = _r.dot(_r)/_z.dot(_r);
   _sol= _sol + _alpha*_r;
-  _r=_b-_A*z;
+  _r=_b-_A*_z;
 }
 
 
+//Méthode du résidu minimum
+
+Residu::Residu()
+{
+  _r=_b-_A*_sol0;
+}
+
+
+void Residu::calcul_sol()
+{
+  VectorXd _z;
+  double _alpha;
+
+  _z = _A * _r;
+  _alpha = _r.dot(_z)/_z.dot(_z);
+  _sol= _sol + _alpha*_r;
+  _r=_b-_A*_sol;
+}
+
+
+
+/*
 //Méthode de GMRes
 
-GMRes :: GMRes(double beta, Eigen::SparseVector<double> r)
+GMRes::GMRes(double beta, SparseVector<double> r)
 {
   _r=r;
   _beta=beta;
 }
 
-void GMRes::Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0, double beta)
+void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A)
 {
-  _r=_b-_A*_sol0;
-  _beta = _r.norm();
+  _r=b-A*_sol0;
+  //_beta = _r.norm(); pas besoin si beta existe déjà dans le main
 }
 
-void GMRes::Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double>  H)
+void GMRes::Arnoldi(SparseVector<double> v, int N, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double>  H)
 {
   //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
   v_arno.resize(N,N);
@@ -176,9 +165,7 @@ void GMRes::Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<do
 
   for (int j=1 ; j < N  ; j++)
   {
-
     wj= A*v_arno.col(j);
-
     for (int i=1 ; i < j  ; i++)
     {
       vi=v_ano.col(i);
@@ -191,29 +178,19 @@ void GMRes::Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<do
     }
 
     zj = wj - Sk;
-
     H(j+1,j)= zj.norm();
 
     if (H(j+1,j)=0)
     {
       break;
     }
-
     v_arno.col(j+1) = zj / H(j+1,j) ;
-
   }
-
 }
 
-
-void GMRes::calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A)
+void GMRes::calcul_sol(SparseVector<double> b, SparseMatrix<double> A)
 {}
-
-
-
-
-
-
+*/
 
 #define _METHODE_RES_CPP
 #endif
