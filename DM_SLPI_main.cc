@@ -16,7 +16,7 @@ int main()
 	double eps(0.0001);
 	SparseMatrix<double> Id(N,N), A(N,N), D(N,N), E(N,N), F(N,N), B(N,N);
 	SparseVector<double> sol(N), sol0(N), b(N);
-	double alpha_sujet(0.1);
+	double a(0.1);
 	SparseVector<double> r;
 	int userchoicemethode;
 	string results;
@@ -26,7 +26,7 @@ int main()
 	Id=MatrixXd::Identity(N,N);    //Matrice Identité
 	B.setRandom(B.rows(),B.cols());        //Matrice random B
 	//Lisa: Ce que je comprends du sujet, c'est que la matrice  ne doit contenir que des valeurs égale à 0 ou à 1, pas entre les deux.
-	A=alpha_sujet*Id+B.transpose()*B;        //Matrice A
+	A=a*Id+B.transpose()*B;        //Matrice A
 	sol0=VectorXd::Random(sol0.rows()); //Définir un valeur de sol0
 	r=b-A*sol0; //Initialisation de r
 
