@@ -11,6 +11,21 @@ using namespace std;
 // Constructeur par défaut
 MethodeRes::MethodeRes()
 {}
+//
+// MethodeRes::MethodeRes(VectorXd b, MatrixXd A, VectorXd sol0, VectorXd r,string results, MethodeRes* methode)
+//   {
+//     _A=A;
+//     _b=b;
+//     _sol0=sol0;
+//     _sol=sol0;
+//     _r=r;
+//     _methode=methode;
+//
+//     if (results.size() > 0)
+//     {
+//       _methode->InitializeFileName(results);
+//     }
+//   }
 
 // Destructeur par défaut
 MethodeRes::~MethodeRes()
@@ -49,8 +64,32 @@ void MethodeRes::SaveSolution(const int nb_iterations) //reste à déterminer ce
 
 //Méthode de Jacobi
 
-Jacobi::Jacobi()
+Jacobi::Jacobi(MatrixXd D, MatrixXd F, MatrixXd E, MatrixXd M, MatrixXd N)
 {
+  _D=D;
+  _F=F;
+  _E=E;
+  _M=M;
+  _N=N;
+}
+
+void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
+
+{
+
+  _A=A;
+  _b=b;
+  _sol0=sol0;
+  _sol=sol0;
+  _r=r;
+  _methode=methode;
+
+  if (results.size() > 0)
+  {
+    _methode->InitializeFileName(results);
+  }
+
+
   _D.setZero(_D.rows(),_D.cols());
   _E.setZero(_E.rows(),_E.cols());
   _F.setZero(_F.rows(),_F.cols());
@@ -58,12 +97,18 @@ Jacobi::Jacobi()
   _N.setZero(_N.rows(),_N.cols());
 
   // Définition des matrices à utiliser dans le cas de Jacobi
+
+
   _D=_A.diagonal();   // Diagonale de A
+
+
+
 
   //Création de M=D^-1
   for (int i=0 ; i<_D.rows() ; ++i)
   {
-    _M(i,i)=1/_D(i,i);
+    //  cout << _D.row() << endl;
+    _M(i,i)=1/_D(i,0);
   }
 
   //Création de E et F
@@ -74,17 +119,23 @@ Jacobi::Jacobi()
       if (i<j)
       {
         _E(i,j)=-_A(i,j);     // Partie triangulaire supérieure de A
+        cout << _E(i,j) << endl;
+
       }
       else if (i>j)
       {
         _F(i,j)=-_A(i,j);     // Partie triangulaire inférieure de A
+                cout << _F(i,j) << endl;
       }
     }
   }
   _N=_E+_F;
 
   _r=_b-_A*_sol0;
+
+  cout << "_r=" << _r << endl;  
 }
+
 
 void Jacobi::calcul_sol()
 {
@@ -97,28 +148,44 @@ void Jacobi::calcul_sol()
 
 GPO::GPO()
 {
-  _r=_b-_A*_sol0;
+
+}
+
+
+void GPO :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
+{
+
+    _r=_b-_A*_sol0;
 }
 
 void GPO :: calcul_sol()
 {
-  VectorXd _z;
-  double _alpha;
+  VectorXd z;
+  //double _alpha;
 
-  _z = _A *_r;
-  _alpha = _r.dot(_r)/_z.dot(_r);
+  z = _A *_r;
+  _alpha = _r.dot(_r)/z.dot(_r);
   _sol= _sol + _alpha*_r;
-  _r=_b-_A*_z;
+  _r=_b-_alpha*z;
 }
+
+
 
 
 //Méthode du résidu minimum
 
 Residu::Residu()
 {
-  _r=_b-_A*_sol0;
+
 }
 
+
+void Residu :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
+{
+
+
+    _r=_b-_A*_sol0;
+}
 
 void Residu::calcul_sol()
 {
@@ -135,34 +202,28 @@ void Residu::calcul_sol()
 
 /*
 //Méthode de GMRes
-
 GMRes::GMRes(double beta, SparseVector<double> r)
 {
   _r=r;
   _beta=beta;
 }
-
 void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A)
 {
   _r=b-A*_sol0;
   //_beta = _r.norm(); pas besoin si beta existe déjà dans le main
 }
-
 void GMRes::Arnoldi(SparseVector<double> v, int N, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double>  H)
 {
   //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
   v_arno.resize(N,N);
   H.resize(N,N);
-
   //definition des vecteurs et matrices locaux utilisés:
   SparseVector<double> wj(N); // Produit matrice vecteur A*vj, économiser des opérations
   SparseVector<double> vi(N); // Vecteur vi, économiser des opérations
   SparseVector<double> zj(N);
   SparseVector<double> Sk(N); // Vecteur résultant de la somme
-
   //Normalisation de v1
   v_arno.col(1)= (1/v.norm())*v;
-
   for (int j=1 ; j < N  ; j++)
   {
     wj= A*v_arno.col(j);
@@ -171,15 +232,12 @@ void GMRes::Arnoldi(SparseVector<double> v, int N, SparseMatrix<double> A, Spars
       vi=v_ano.col(i);
       H(i,j)= wj.dot(vi);
     }
-
     for (int k=1 ; k < N  ; k++)
     {
       Sk = Sk + H(k,j)*v_arno.col(j);
     }
-
     zj = wj - Sk;
     H(j+1,j)= zj.norm();
-
     if (H(j+1,j)=0)
     {
       break;
@@ -187,7 +245,6 @@ void GMRes::Arnoldi(SparseVector<double> v, int N, SparseMatrix<double> A, Spars
     v_arno.col(j+1) = zj / H(j+1,j) ;
   }
 }
-
 void GMRes::calcul_sol(SparseVector<double> b, SparseMatrix<double> A)
 {}
 */
