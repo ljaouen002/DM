@@ -52,7 +52,7 @@ int main()
 
 		case 2: //GPO
 			double alpha; //Attention, alpha ici est le coefficient de descente, différent du alpha précédent de l'énoncé
-			methode = new Jacobi(alpha);
+			methode = new GPO(alpha);
 			results = "solution_GPO";
 		break;
 
