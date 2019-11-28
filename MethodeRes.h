@@ -21,11 +21,13 @@ class MethodeRes
     // Initialiser le nom du fichier solution
     void InitializeFileName(const std::string file_name);
     // Initialisation
-    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
+    virtual void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)=0;
     // Calcul de x
     virtual void calcul_sol() =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations);
+
+
 };
 
 // Classe fille publique de MethodeRes
@@ -34,7 +36,8 @@ class Jacobi : public MethodeRes
   private:
     Eigen::MatrixXd _D, _E, _F, _M, _N;
   public:
-    Jacobi();
+    Jacobi(Eigen::MatrixXd D, Eigen::MatrixXd F, Eigen::MatrixXd E, Eigen::MatrixXd M, Eigen::MatrixXd N);
+    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
@@ -43,11 +46,12 @@ class GPO : public MethodeRes
 {
   private:
     double _alpha; //coefficient de descente
-    Eigen::VectorXd _z;
+    //Eigen::VectorXd _z;
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
     //constructeur
     GPO();
+    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
@@ -60,6 +64,7 @@ class Residu : public MethodeRes
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
     Residu();
+    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
