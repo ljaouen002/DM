@@ -27,12 +27,13 @@ int main()
 	B.setRandom(B.rows(),B.cols());        //Matrice random B
 	//Lisa: Ce que je comprends du sujet, c'est que la matrice  ne doit contenir que des valeurs égale à 0 ou à 1, pas entre les deux.
 	A=alpha_sujet*Id+B.transpose()*B;        //Matrice A
-
+	sol0=VectorXd::Random(sol0.rows()); //Définir un valeur de sol0
+	r=b-A*sol0; //Initialisation de r
 
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
 	cout << "1) Jacobi"<< endl;
-	cout << "2) Gradient Pas Optimal" << endl;
+	cout << "2) Gradient à Pas Optimal" << endl;
 	cout << "3) Résidu Minimum" << endl;
 	cout << "4) GMRes" << endl;
 	cin >> userchoicemethode;
@@ -44,7 +45,7 @@ int main()
 	{
 
 		case 1: //Jacobi
-			methode = new Jacobi();
+			methode = new Jacobi(r,sol0);
 			// Nom du fichier solution
 			results = "solution_Jacobi.txt";
 		break;
@@ -52,20 +53,20 @@ int main()
 
 		case 2: //GPO
 			double alpha; //Attention, alpha ici est le coefficient de descente, différent du alpha précédent de l'énoncé
-			methode = new GPO(alpha);
+			methode = new GPO(alpha,r);
 			results = "solution_GPO";
 		break;
 
 
 		case 3: //Résidu
 			double alpha;
-			methode = new Residu(alpha);
+			methode = new Residu(alpha,r);
 			results = "solution_Residu.txt";
 		break;
 
 		case 4: //GMRes
 			//double beta;
-			//methode = new GMRes(beta);
+			//methode = new GMRes(beta,r);
 			//results = "solution_GMRes.txt";
 		break;
 
