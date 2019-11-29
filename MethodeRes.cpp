@@ -38,13 +38,13 @@ void MethodeRes::InitializeFileName(const string file_name)
 }
 
 // Initialisation de vos différentes variables
-void MethodeRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
+void MethodeRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 {
   _A=A;
   _b=b;
   _sol0=sol0;
   _sol=sol0;
-  _r=r;
+  //_r=r;
   _methode=methode;
 
   if (results.size() > 0)
@@ -53,7 +53,7 @@ void MethodeRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, 
   }
 }
 
-void MethodeRes::SaveSolution(const int nb_iterations) //reste à déterminer ce qu'on trace
+void MethodeRes::SaveSolution(const int nb_iterations, Eigen::SparseVector<double>& _r) //reste à déterminer ce qu'on trace
 {
   _file_out << nb_iterations;
   _file_out << " " << _r.norm();
@@ -73,21 +73,21 @@ Jacobi::Jacobi(SparseMatrix<double> D, SparseMatrix<double> F, SparseMatrix<doub
   _N=N;
 }
 
-void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
+void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 
 {
-
-  _A=A;
-  _b=b;
-  _sol0=sol0;
-  _sol=sol0;
-  _r=r;
-  _methode=methode;
-
-  if (results.size() > 0)
-  {
-    _methode->InitializeFileName(results);
-  }
+  MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
+  // _A=A;
+  // _b=b;
+  // _sol0=sol0;
+  // _sol=sol0;
+  // _r=r;
+  // _methode=methode;
+  //
+  // if (results.size() > 0)
+  // {
+  //   _methode->InitializeFileName(results);
+  // }
 
 
   _D=0*_A;
@@ -97,17 +97,15 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
   _N=0*_A;
 
   // Définition des matrices à utiliser dans le cas de Jacobi
-  _D=_A.diagonal();   // Diagonale de A
+//  _D=_A.diagonal();   // Diagonale de A
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
   //Création de M=D^-1
   for (int i=0 ; i<_D.rows() ; ++i)
   {
     //  cout << _D.row() << endl;
-    _M.coeffRef(i,i)=1/_D.coeffRef(i,0);
+    _D.coeffRef(i,i) = _A.coeffRef(i,i);
+    _M.coeffRef(i,i)=1/_D.coeffRef(i,i);
   }
 
   //Création de E et F
@@ -117,23 +115,14 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
     {
       if (i<j)
       {
-<<<<<<< HEAD
-        _E.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire supérieure de A
-      //  cout << _E(i,j) << endl;
-=======
-        _E(i,j)=-_A(i,j);     // Partie triangulaire supérieure de A
-        //cout << _E(i,j) << endl;
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 
+        _E.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire supérieure de A
+      //  cout << "E"<<_E.coeffRef(i,j) << endl;
       }
       else if (i>j)
       {
-<<<<<<< HEAD
         _F.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire inférieure de A
-=======
-        _F(i,j)=-_A(i,j);     // Partie triangulaire inférieure de A
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
-                //cout << _F(i,j) << endl;
+      //  cout << "F" << _F.coeffRef(i,j) << endl;
       }
     }
   }
@@ -141,34 +130,26 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
 
   _r=_b-_A*_sol0;
 
-<<<<<<< HEAD
+  cout << "F" << _F << endl;
+  cout << "A" << _A << endl;
   cout << "_r=" << _r << endl;
-=======
-<<<<<<< HEAD
-  cout << "_r=" << _r << endl;
-=======
-	//	cout <<_r.norm() << " " <<  "1" << endl;
->>>>>>> 409d716ac4dbc893d33b79cd73a3ca18ae722669
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
+
+
+	//	cout <<_r.norm() << " " <<  "1" << endl;>>>>>>> 409d716ac4dbc893d33b79cd73a3ca18ae722669>>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 }
 
 
-void Jacobi::calcul_sol()
+void Jacobi::calcul_sol(Eigen::SparseVector<double>& _r)
 {
   _sol=_M*_N*_sol+_M*_b;
-<<<<<<< HEAD
+
   _r=_b-_A*_sol;
 //  cout <<_N.norm() << " " <<  "1" << endl;
 //  cout <<_r.norm() << " " <<  "2" << endl;
-=======
-  _methode->Get_r()=_b-_A*_sol;
-//  cout <<_N.norm() << " " <<  "1" << endl;
-//  cout <<_r.norm() << " " <<  "2" << endl;
 
 }
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 
-}
+
 
 //Méthode du GPO
 
@@ -178,63 +159,43 @@ GPO::GPO()
 }
 
 
-void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
+void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 {
-  _A=A;
-  _b=b;
-  _sol0=sol0;
-  _sol=sol0;
-  _r=r;
-  _methode=methode;
-
-  if (results.size() > 0)
-  {
-    _methode->InitializeFileName(results);
-  }
+    MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
     _r=_b-_A*_sol0;
 }
 
-void GPO :: calcul_sol()
+void GPO :: calcul_sol(Eigen::SparseVector<double>& _r)
 {
   SparseVector<double> z;
   //double _alpha;
 
-<<<<<<< HEAD
   z = _A *_r;
   _alpha = _r.dot(_r)/z.dot(_r);
   _sol= _sol + _alpha*_r;
  _r=_r-_alpha*z;
-=======
-  z = _A *_methode->Get_r();
-  _alpha = _methode->Get_r().dot(_methode->Get_r())/z.dot(_methode->Get_r());
-  _sol= _sol + _alpha*_methode->Get_r();
-  _methode->Get_r()=_b-_alpha*z;
->>>>>>> 409d716ac4dbc893d33b79cd73a3ca18ae722669
+
+
 }
 
 
 //Méthode du résidu minimum
 
-<<<<<<< HEAD
-void Residu::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
-=======
-void Residu::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
+
+void Residu::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 {
-  MethodeRes::Initialisation(b,A,sol0,r,results,methode);
+  MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
   _r=_b-_A*_sol;
 }
 
-void Residu::calcul_sol()
+void Residu::calcul_sol(Eigen::SparseVector<double>& _r)
 {
   double _alpha;
-<<<<<<< HEAD
+
   SparseVector<double> _z;
-=======
-  VectorXd _z;
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
+
 
   _z=_A*_r;
   _alpha=_r.dot(_z)/_z.dot(_z);
@@ -246,7 +207,7 @@ void Residu::calcul_sol()
 
 /*
 //Méthode de GMRes
-GMRes::GMRes(double beta, SparseVector<double> r)
+GMRes::GMRes(double beta, Eigen::SparseVector<double>& _r)
 {
   _r=r;
   _beta=beta;
