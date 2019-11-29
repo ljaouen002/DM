@@ -13,7 +13,7 @@ CXX_FLAGS = $(DEBUG_FLAG)
 PROG = DM
 
 # Les fichiers source à compiler
-SRC = DM_SLPI_main.cc TimeScheme.cpp OdeSystem.cpp Fonctions.cpp main_dense.cc main_sparse.cc MethodeRes.cpp
+SRC = DM_SLPI_main.cc MethodeRes.cpp
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROG) : $(SRC)
