@@ -102,8 +102,6 @@ void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::Vecto
   _D=_A.diagonal();   // Diagonale de A
 
 
-
-
   //Création de M=D^-1
   for (int i=0 ; i<_D.rows() ; ++i)
   {
@@ -119,13 +117,13 @@ void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::Vecto
       if (i<j)
       {
         _E(i,j)=-_A(i,j);     // Partie triangulaire supérieure de A
-        cout << _E(i,j) << endl;
+        //cout << _E(i,j) << endl;
 
       }
       else if (i>j)
       {
         _F(i,j)=-_A(i,j);     // Partie triangulaire inférieure de A
-                cout << _F(i,j) << endl;
+                //cout << _F(i,j) << endl;
       }
     }
   }
@@ -133,14 +131,17 @@ void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::Vecto
 
   _r=_b-_A*_sol0;
 
-  cout << "_r=" << _r << endl;  
+	//	cout <<_r.norm() << " " <<  "1" << endl;
 }
 
 
 void Jacobi::calcul_sol()
 {
   _sol=_M*_N*_sol+_M*_b;
-  _r=_b-_A*_sol;
+  _methode->Get_r()=_b-_A*_sol;
+//  cout <<_N.norm() << " " <<  "1" << endl;
+//  cout <<_r.norm() << " " <<  "2" << endl;
+
 }
 
 
@@ -163,10 +164,10 @@ void GPO :: calcul_sol()
   VectorXd z;
   //double _alpha;
 
-  z = _A *_r;
-  _alpha = _r.dot(_r)/z.dot(_r);
-  _sol= _sol + _alpha*_r;
-  _r=_b-_alpha*z;
+  z = _A *_methode->Get_r();
+  _alpha = _methode->Get_r().dot(_methode->Get_r())/z.dot(_methode->Get_r());
+  _sol= _sol + _alpha*_methode->Get_r();
+  _methode->Get_r()=_b-_alpha*z;
 }
 
 
