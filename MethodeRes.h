@@ -27,6 +27,8 @@ class MethodeRes
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations);
 
+    Eigen::VectorXd Get_r(){return _r;};
+
 
 };
 
