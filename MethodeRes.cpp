@@ -133,7 +133,7 @@ void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::Vecto
 
   _r=_b-_A*_sol0;
 
-  cout << "_r=" << _r << endl;  
+  cout << "_r=" << _r << endl;
 }
 
 
@@ -154,6 +154,17 @@ GPO::GPO()
 
 void GPO :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
 {
+  _A=A;
+  _b=b;
+  _sol0=sol0;
+  _sol=sol0;
+  _r=r;
+  _methode=methode;
+
+  if (results.size() > 0)
+  {
+    _methode->InitializeFileName(results);
+  }
 
     _r=_b-_A*_sol0;
 }
@@ -166,7 +177,7 @@ void GPO :: calcul_sol()
   z = _A *_r;
   _alpha = _r.dot(_r)/z.dot(_r);
   _sol= _sol + _alpha*_r;
-  _r=_b-_alpha*z;
+ _r=_r-_alpha*z;
 }
 
 

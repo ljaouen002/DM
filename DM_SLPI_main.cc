@@ -26,7 +26,7 @@ int main()
 	r=b-A*sol0;                                //Initialisation de r
 
 
-//qlsncfklef
+
 
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
@@ -51,7 +51,7 @@ int main()
 
 		case 2: //GPO
 			methode = new GPO();
-			results = "solution_GPO";           // Nom du fichier solution
+			results = "solution_GPO.txt";           // Nom du fichier solution
 		break;
 
 
@@ -81,6 +81,7 @@ int main()
 		methode->calcul_sol();   //Appel de la fonction solution
 		methode->SaveSolution(k);
 		cout << "k=" << k << endl;
+		cout << "r_norm=" <<r.norm() << endl;
 		k+=1;
 	}
 	//cout << _sol << endl;
