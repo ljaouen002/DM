@@ -58,8 +58,13 @@ class Residu : public MethodeRes
   private:
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
+<<<<<<< HEAD
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double> r, std::string results, MethodeRes* methode);
     void calcul_sol();
+=======
+    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
+void calcul_sol();
+>>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 };
 
 
