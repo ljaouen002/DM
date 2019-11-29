@@ -12,16 +12,26 @@ int main()
 {
 	int N(10), k(0), k_max(100);
 	double eps(0.0001), a(0.1);
+	MatrixXd C(N,N);
 	SparseMatrix<double> Id(N,N), A(N,N), B(N,N), D(N,N), E(N,N), F(N,N), M(N,N), N_J(N,N);
 	SparseVector<double> b(N), sol0(N), sol(N), r(N), z(N);
 	int userchoicemethode;
 	string results;
 
 	// Définition des matrices à utiliser globalement
-	Id.setIdentity(N,N);                       //Matrice Identité
-	B.setRandom(B.rows(),B.cols());     //Matrice random B
+	Id.setIdentity();                          //Matrice Identité
+	C=MatrixXd::Random(C.rows(),C.cols());     //Matrice random B
+	B = C.sparseView();
 	A=a*Id+B.transpose()*B;                    //Matrice A
-	sol0.setRandom(sol0.rows());        //Définir un valeur de sol0
+	for (int i=0 ; i<sol0.rows() ; i++)
+	{
+		sol0.coeffRef(i)=1.;                     //Définir un valeur de sol0
+	}
+	for (int i=0 ; i<b.rows() ; i++)
+	{
+		b.coeffRef(i)=i;
+		//.col .row .block(i,j,nbi,nbj)
+	}
 	r=b-A*sol0;                                //Initialisation de r
 
 	cout << "------------------------------------" << endl;

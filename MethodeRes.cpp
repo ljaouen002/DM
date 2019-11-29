@@ -90,25 +90,20 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
   }
 
 
-  _D.setZero(_D.rows(),_D.cols());
-  _E.setZero(_E.rows(),_E.cols());
-  _F.setZero(_F.rows(),_F.cols());
-  _M.setZero(_M.rows(),_M.cols());
-  _N.setZero(_N.rows(),_N.cols());
+  _D=0*_A;
+  _E=0*_A;
+  _F=0*_A;
+  _M=0*_A;
+  _N=0*_A;
 
   // Définition des matrices à utiliser dans le cas de Jacobi
-
-
   _D=_A.diagonal();   // Diagonale de A
-
-
-
 
   //Création de M=D^-1
   for (int i=0 ; i<_D.rows() ; ++i)
   {
     //  cout << _D.row() << endl;
-    _M(i,i)=1/_D(i,0);
+    _M.coeffRef(i,i)=1/_D.coeffRef(i,0);
   }
 
   //Création de E et F
@@ -118,14 +113,14 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
     {
       if (i<j)
       {
-        _E(i,j)=-_A(i,j);     // Partie triangulaire supérieure de A
-        cout << _E(i,j) << endl;
+        _E.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire supérieure de A
+      //  cout << _E(i,j) << endl;
 
       }
       else if (i>j)
       {
-        _F(i,j)=-_A(i,j);     // Partie triangulaire inférieure de A
-                cout << _F(i,j) << endl;
+        _F.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire inférieure de A
+                //cout << _F(i,j) << endl;
       }
     }
   }
