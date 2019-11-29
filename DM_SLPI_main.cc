@@ -26,7 +26,7 @@ int main()
 	r=b-A*sol0;                                //Initialisation de r
 
 
-
+//qlsncfklef
 
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
