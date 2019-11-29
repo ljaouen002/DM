@@ -30,16 +30,12 @@ int main()
 	for (int i=0 ; i<b.rows() ; i++)
 	{
 		b.coeffRef(i)=i;
+		//cout << "b" << b.coeffRef(i) << endl;
 		//.col .row .block(i,j,nbi,nbj)
 	}
 	r=b-A*sol0;                                //Initialisation de r
 
-<<<<<<< HEAD
-=======
 
-
-
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
 	cout << "1) Jacobi"<< endl;
@@ -52,20 +48,8 @@ int main()
 
 	switch(userchoicemethode)
 	{
-	case 1: //Jacobi
-		methode = new Jacobi(D, F, E, M, N_J);
-		results = "solution_Jacobi.txt";    // Nom du fichier solution
-	break;
 
-<<<<<<< HEAD
-	case 2: //GPO
-		methode = new GPO();
-		results = "solution_GPO";           // Nom du fichier solution
-	break;
-=======
 		case 1: //Jacobi
-
-
 			methode = new Jacobi(D, F, E, M, N_J);
 			results = "solution_Jacobi.txt";    // Nom du fichier solution
 		break;
@@ -76,7 +60,6 @@ int main()
 			results = "solution_GPO.txt";           // Nom du fichier solution
 		break;
 
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 
 	case 3: //Résidu
 		methode = new Residu();
@@ -97,18 +80,15 @@ int main()
 	methode->Initialisation(b,A,sol0,r,results,methode);
 
 	// On sauvegarde la solution
-	methode->SaveSolution(0);
+	methode->SaveSolution(0, r);
 
 	while (r.norm()>eps && k<=k_max)
 	{
-		methode->calcul_sol();   //Appel de la fonction solution
-		methode->SaveSolution(k);
-<<<<<<< HEAD
-		//cout << "k=" << k << endl;
-=======
-		cout << "k=" << k << endl;
+		methode->calcul_sol(r);   //Appel de la fonction solution
+		methode->SaveSolution(k,r);
+
+	//	cout << "k=" << k << endl;
 		cout << "r_norm=" <<r.norm() << endl;
->>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 		k+=1;
 	}
 	//cout << _sol << endl;
