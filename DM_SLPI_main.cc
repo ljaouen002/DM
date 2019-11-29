@@ -12,17 +12,16 @@ int main()
 {
 	int N(10), k(0), k_max(100);
 	double eps(0.0001), a(0.1);
-	MatrixXd Id(N,N), A(N,N), B(N,N);
-	MatrixXd D(N,N), E(N,N), F(N,N), M(N,N), N_J(N,N);
-	VectorXd b(N), sol0(N), sol(N), r(N), z(N);
+	SparseMatrix<double> Id(N,N), A(N,N), B(N,N), D(N,N), E(N,N), F(N,N), M(N,N), N_J(N,N);
+	SparseVector<double> b(N), sol0(N), sol(N), r(N), z(N);
 	int userchoicemethode;
 	string results;
 
 	// Définition des matrices à utiliser globalement
-	Id=MatrixXd::Identity(N,N);                //Matrice Identité
-	B=MatrixXd::Random(B.rows(),B.cols());     //Matrice random B
+	Id.setIdentity(N,N);                       //Matrice Identité
+	B.setRandom(B.rows(),B.cols());     //Matrice random B
 	A=a*Id+B.transpose()*B;                    //Matrice A
-	sol0=VectorXd::Random(sol0.rows());        //Définir un valeur de sol0
+	sol0.setRandom(sol0.rows());        //Définir un valeur de sol0
 	r=b-A*sol0;                                //Initialisation de r
 
 	cout << "------------------------------------" << endl;
@@ -72,7 +71,7 @@ int main()
 	{
 		methode->calcul_sol();   //Appel de la fonction solution
 		methode->SaveSolution(k);
-		cout << "k=" << k << endl;
+		//cout << "k=" << k << endl;
 		k+=1;
 	}
 	//cout << _sol << endl;

@@ -38,7 +38,7 @@ void MethodeRes::InitializeFileName(const string file_name)
 }
 
 // Initialisation de vos différentes variables
-void MethodeRes::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0, VectorXd r,string results, MethodeRes* methode)
+void MethodeRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
 {
   _A=A;
   _b=b;
@@ -64,7 +64,7 @@ void MethodeRes::SaveSolution(const int nb_iterations) //reste à déterminer ce
 
 //Méthode de Jacobi
 
-Jacobi::Jacobi(MatrixXd D, MatrixXd F, MatrixXd E, MatrixXd M, MatrixXd N)
+Jacobi::Jacobi(SparseMatrix<double> D, SparseMatrix<double> F, SparseMatrix<double> E, SparseMatrix<double> M, SparseMatrix<double> N)
 {
   _D=D;
   _F=F;
@@ -73,7 +73,7 @@ Jacobi::Jacobi(MatrixXd D, MatrixXd F, MatrixXd E, MatrixXd M, MatrixXd N)
   _N=N;
 }
 
-void Jacobi :: Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
+void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
 
 {
 
@@ -154,7 +154,7 @@ GPO::GPO()
 }
 
 
-void GPO :: Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
+void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
 {
 
     _r=_b-_A*_sol0;
@@ -162,7 +162,7 @@ void GPO :: Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, s
 
 void GPO :: calcul_sol()
 {
-  VectorXd z;
+  SparseVector<double> z;
   //double _alpha;
 
   z = _A *_r;
@@ -174,7 +174,7 @@ void GPO :: calcul_sol()
 
 //Méthode du résidu minimum
 
-void Residu::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
+void Residu::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, SparseVector<double> r,string results, MethodeRes* methode)
 {
   MethodeRes::Initialisation(b,A,sol0,r,results,methode);
 
@@ -184,7 +184,7 @@ void Residu::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, 
 void Residu::calcul_sol()
 {
   double _alpha;
-  VectorXd _z;
+  SparseVector<double> _z;
 
   _z=_A*_r;
   _alpha=_r.dot(_z)/_z.dot(_z);

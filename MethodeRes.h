@@ -7,9 +7,9 @@
 class MethodeRes
 {
   protected:
-    Eigen::MatrixXd _A, _b;
+    Eigen::SparseMatrix<double> _A, _b;
     // Vecteur initial et vecteur solution
-    Eigen::VectorXd _sol0, _sol, _r;
+    Eigen::SparseVector<double> _sol0, _sol, _r;
     // Écriture du fichier
     std::ofstream _file_out;
     MethodeRes* _methode;
@@ -21,7 +21,7 @@ class MethodeRes
     // Initialiser le nom du fichier solution
     void InitializeFileName(const std::string file_name);
     // Initialisation
-    virtual void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)=0;
+    virtual void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double> r, std::string results, MethodeRes* methode)=0;
     // Calcul de x
     virtual void calcul_sol() =0;
     // Remplissage de la solution
@@ -32,10 +32,10 @@ class MethodeRes
 class Jacobi : public MethodeRes
 {
   private:
-    Eigen::MatrixXd _D, _E, _F, _M, _N;
+    Eigen::SparseMatrix<double> _D, _E, _F, _M, _N;
   public:
-    Jacobi(Eigen::MatrixXd D, Eigen::MatrixXd F, Eigen::MatrixXd E, Eigen::MatrixXd M, Eigen::MatrixXd N);
-    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
+    Jacobi(Eigen::SparseMatrix<double> D, Eigen::SparseMatrix<double> F, Eigen::SparseMatrix<double> E, Eigen::SparseMatrix<double> M, Eigen::SparseMatrix<double> N);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double> r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
@@ -48,7 +48,7 @@ class GPO : public MethodeRes
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
     GPO();
-    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double> r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
@@ -58,7 +58,7 @@ class Residu : public MethodeRes
   private:
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
-    void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double> r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };
 
