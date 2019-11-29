@@ -73,7 +73,7 @@ Jacobi::Jacobi(MatrixXd D, MatrixXd F, MatrixXd E, MatrixXd M, MatrixXd N)
   _N=N;
 }
 
-void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
+void Jacobi :: Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
 
 {
 
@@ -133,7 +133,7 @@ void Jacobi :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::Vecto
 
   _r=_b-_A*_sol0;
 
-  cout << "_r=" << _r << endl;  
+  cout << "_r=" << _r << endl;
 }
 
 
@@ -141,8 +141,10 @@ void Jacobi::calcul_sol()
 {
   _sol=_M*_N*_sol+_M*_b;
   _r=_b-_A*_sol;
-}
+//  cout <<_N.norm() << " " <<  "1" << endl;
+//  cout <<_r.norm() << " " <<  "2" << endl;
 
+}
 
 //Méthode du GPO
 
@@ -152,7 +154,7 @@ GPO::GPO()
 }
 
 
-void GPO :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
+void GPO :: Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
 {
 
     _r=_b-_A*_sol0;
@@ -170,32 +172,24 @@ void GPO :: calcul_sol()
 }
 
 
-
-
 //Méthode du résidu minimum
 
-Residu::Residu()
+void Residu::Initialisation(VectorXd b, MatrixXd A, VectorXd sol0 , VectorXd r, string results, MethodeRes* methode)
 {
+  MethodeRes::Initialisation(b,A,sol0,r,results,methode);
 
-}
-
-
-void Residu :: Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode)
-{
-
-
-    _r=_b-_A*_sol0;
+  _r=_b-_A*_sol;
 }
 
 void Residu::calcul_sol()
 {
-  VectorXd _z;
   double _alpha;
+  VectorXd _z;
 
-  _z = _A * _r;
-  _alpha = _r.dot(_z)/_z.dot(_z);
-  _sol= _sol + _alpha*_r;
-  _r=_b-_A*_sol;
+  _z=_A*_r;
+  _alpha=_r.dot(_z)/_z.dot(_z);
+  _sol=_sol+_alpha*_r;
+  _r=_r-_alpha*_z;
 }
 
 

@@ -26,8 +26,6 @@ class MethodeRes
     virtual void calcul_sol() =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations);
-
-
 };
 
 // Classe fille publique de MethodeRes
@@ -49,7 +47,6 @@ class GPO : public MethodeRes
     //Eigen::VectorXd _z;
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
-    //constructeur
     GPO();
     void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
     void calcul_sol();
@@ -59,11 +56,8 @@ class GPO : public MethodeRes
 class Residu : public MethodeRes
 {
   private:
-    double _alpha; //coefficient de descente
-    Eigen::VectorXd _z;
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
-    Residu();
     void Initialisation(Eigen::VectorXd b, Eigen::MatrixXd A, Eigen::VectorXd sol0 , Eigen::VectorXd r, std::string results, MethodeRes* methode);
     void calcul_sol();
 };

@@ -14,7 +14,7 @@ int main()
 	double eps(0.0001), a(0.1);
 	MatrixXd Id(N,N), A(N,N), B(N,N);
 	MatrixXd D(N,N), E(N,N), F(N,N), M(N,N), N_J(N,N);
-	VectorXd b(N), sol0(N), sol(N), r(N);
+	VectorXd b(N), sol0(N), sol(N), r(N), z(N);
 	int userchoicemethode;
 	string results;
 
@@ -24,9 +24,6 @@ int main()
 	A=a*Id+B.transpose()*B;                    //Matrice A
 	sol0=VectorXd::Random(sol0.rows());        //Définir un valeur de sol0
 	r=b-A*sol0;                                //Initialisation de r
-
-
-//qlsncfklef
 
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
@@ -40,34 +37,29 @@ int main()
 
 	switch(userchoicemethode)
 	{
+	case 1: //Jacobi
+		methode = new Jacobi(D, F, E, M, N_J);
+		results = "solution_Jacobi.txt";    // Nom du fichier solution
+	break;
 
-		case 1: //Jacobi
+	case 2: //GPO
+		methode = new GPO();
+		results = "solution_GPO";           // Nom du fichier solution
+	break;
 
-
-			methode = new Jacobi(D, F, E, M, N_J);
-			results = "solution_Jacobi.txt";    // Nom du fichier solution
-		break;
-
-
-		case 2: //GPO
-			methode = new GPO();
-			results = "solution_GPO";           // Nom du fichier solution
-		break;
-
-
-		case 3: //Résidu
-			methode = new Residu();
-			results = "solution_Residu.txt";    // Nom du fichier solution
-		break;
+	case 3: //Résidu
+		methode = new Residu();
+		results = "solution_Residu.txt";    // Nom du fichier solution
+	break;
 
 		/*case 4: //GMRes
 			methode = new GMRes(beta);
 			results = "solution_GMRes.txt";    // Nom du fichier solution
 		break;*/
 
-		default:
-			cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
-			exit(0);
+	default:
+		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
+		exit(0);
 	}
 
 	// Initialisations
