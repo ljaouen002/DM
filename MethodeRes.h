@@ -32,9 +32,9 @@ class MethodeRes
 class Jacobi : public MethodeRes
 {
   private:
-    Eigen::SparseMatrix<double> _D, _E, _F, _M, _N;
+    Eigen::SparseMatrix<double> _M, _N;
   public:
-    Jacobi(Eigen::SparseMatrix<double> D, Eigen::SparseMatrix<double> F, Eigen::SparseMatrix<double> E, Eigen::SparseMatrix<double> M, Eigen::SparseMatrix<double> N);
+    Jacobi( Eigen::SparseMatrix<double> M, Eigen::SparseMatrix<double> N);
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
     void calcul_sol(Eigen::SparseVector<double>& _r);
 };
@@ -43,7 +43,7 @@ class Jacobi : public MethodeRes
 class GPO : public MethodeRes
 {
   private:
-    double _alpha; //coefficient de descente
+  //  double _alpha; //coefficient de descente
     //Eigen::VectorXd _z;
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
@@ -58,28 +58,25 @@ class Residu : public MethodeRes
   private:
     //Eigen::SparseMatrix<double> _M; //Matrice préconditionnement, dans question 3
   public:
-
+    Residu();
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
     void calcul_sol(Eigen::SparseVector<double>& _r);
-
-
-
 };
 
 
-/*
 // Classe fille publique de MethodeRes
 class GMRes : public MethodeRes
 {
   private:
-    double _beta;
+    Eigen::SparseVector<double> _v_arno;
+    Eigen::SparseVector<double> _H;
   public:
     //constructeur
-    GMRes(double beta, Eigen::SparseVector<double>& _r);
-    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0);
-    void Arnoldi(Eigen::SparseVector<double> v, int N, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, SparseMatrix<double> H);
-    void calcul_sol(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A);
+    GMRes(Eigen::SparseMatrix<double> v_arno, Eigen::SparseMatrix<double> H);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
+    void Arnoldi(Eigen::SparseVector<double> v, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, Eigen::SparseMatrix<double> H);
+    void calcul_sol(Eigen::SparseVector<double>& _r);
 };
-*/
+
 #define _METHODE_RES_H
 #endif

@@ -10,29 +10,51 @@ using namespace Eigen;
 
 int main()
 {
-	int N(10), k(0), k_max(100);
-	double eps(0.0001), a(0.1);
+	int N(3), k(1), k_max(10000);
+	double eps(0.000000001), a(0.1);
 	MatrixXd C(N,N);
-	SparseMatrix<double> Id(N,N), A(N,N), B(N,N), D(N,N), E(N,N), F(N,N), M(N,N), N_J(N,N);
-	SparseVector<double> b(N), sol0(N), sol(N), r(N), z(N);
+	SparseMatrix<double> Id(N,N), A(N,N), B(N,N), M(N,N), N_J(N,N), V(N,N), H(N,N);
+	SparseVector<double> b(N), sol0(N), sol(N), r(N);
 	int userchoicemethode;
 	string results;
 
-	// Définition des matrices à utiliser globalement
+
+	// for (int i=0 ; i<A.rows() ; ++i)
+	// {
+	//   for (int j=0 ; j<A.cols() ; ++j)
+	//   {
+	// 	A.coeffRef(i,j)=1;
+	//   }
+	// }
+
+//	Définition des matrices à utiliser globalement
 	Id.setIdentity();                          //Matrice Identité
-	C=MatrixXd::Random(C.rows(),C.cols());     //Matrice random B
+	C=MatrixXd::Random(N,N);     //Matrice random B
 	B = C.sparseView();
-	A=a*Id+B.transpose()*B;                    //Matrice A
+	A=a*Id+B.transpose()*B;
+	//Matrice A
+
+  // MatrixXd Unit(N,N);
+	// // C est une matrice de réels aléatoires entre -1 et 1
+	// C=MatrixXd::Random(N,N);
+	// // Unit est la matrice dont les coefficients sont tous égaux à 1
+	// Unit=MatrixXd::Constant(N,N,1.);
+	// // La matrice C est désormais une matrice de réels aléatoires entre 0 et 1
+	// C=1./2.*(Unit+C);
+	// // B est la représentation creuse de C
+	// B=C.sparseView();
+	// // définition de la matrice identité
+//	Id.setIdentity();
+	// Initialisation du vecteur b
+	//A= 3*N*Id+B;
+
+
 	for (int i=0 ; i<sol0.rows() ; i++)
 	{
-		sol0.coeffRef(i)=1.;                     //Définir un valeur de sol0
+		sol0.coeffRef(i)=1;
+		b.coeffRef(i)=1;                 //Définir un valeur de sol0
 	}
-	for (int i=0 ; i<b.rows() ; i++)
-	{
-		b.coeffRef(i)=i;
-		//cout << "b" << b.coeffRef(i) << endl;
-		//.col .row .block(i,j,nbi,nbj)
-	}
+
 	r=b-A*sol0;                                //Initialisation de r
 
 
@@ -50,28 +72,28 @@ int main()
 	{
 
 		case 1: //Jacobi
-			methode = new Jacobi(D, F, E, M, N_J);
-			results = "solution_Jacobi.txt";    // Nom du fichier solution
+		methode = new Jacobi( M, N_J);
+		results = "solution_Jacobi.txt";    // Nom du fichier solution
 		break;
 
 
 		case 2: //GPO
-			methode = new GPO();
-			results = "solution_GPO.txt";           // Nom du fichier solution
+		methode = new GPO();
+		results = "solution_GPO.txt";           // Nom du fichier solution
 		break;
 
 
-	case 3: //Résidu
+		case 3: //Résidu
 		methode = new Residu();
 		results = "solution_Residu.txt";    // Nom du fichier solution
-	break;
+		break;
 
-		/*case 4: //GMRes
-			methode = new GMRes(beta);
-			results = "solution_GMRes.txt";    // Nom du fichier solution
-		break;*/
+		case 4: //GMRes
+		methode = new GMRes(V, H);
+		results = "solution_GMRes.txt";    // Nom du fichier solution
+		break;
 
-	default:
+		default:
 		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
 		exit(0);
 	}
@@ -87,8 +109,9 @@ int main()
 		methode->calcul_sol(r);   //Appel de la fonction solution
 		methode->SaveSolution(k,r);
 
-	//	cout << "k=" << k << endl;
-		cout << "r_norm=" <<r.norm() << endl;
+		cout << "k=" << k << "\n"<< endl;
+		cout << "=======================" << endl;
+		//cout << "rbouc" <<r.norm() << endl;
 		k+=1;
 	}
 	//cout << _sol << endl;

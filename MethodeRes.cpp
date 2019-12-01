@@ -63,12 +63,13 @@ void MethodeRes::SaveSolution(const int nb_iterations, Eigen::SparseVector<doubl
 
 
 //Méthode de Jacobi
+//SparseMatrix<double> D, SparseMatrix<double> F, SparseMatrix<double> E,
 
-Jacobi::Jacobi(SparseMatrix<double> D, SparseMatrix<double> F, SparseMatrix<double> E, SparseMatrix<double> M, SparseMatrix<double> N)
+Jacobi::Jacobi(SparseMatrix<double> M, SparseMatrix<double> N)
 {
-  _D=D;
-  _F=F;
-  _E=E;
+  //_D=D;
+//  _F=F;
+  //_E=E;
   _M=M;
   _N=N;
 }
@@ -77,24 +78,15 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
 
 {
   MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
-  // _A=A;
-  // _b=b;
-  // _sol0=sol0;
-  // _sol=sol0;
-  // _r=r;
-  // _methode=methode;
-  //
-  // if (results.size() > 0)
-  // {
-  //   _methode->InitializeFileName(results);
-  // }
 
+SparseMatrix<double> _D, _F, _E;
 
   _D=0*_A;
   _E=0*_A;
   _F=0*_A;
   _M=0*_A;
   _N=0*_A;
+
 
   // Définition des matrices à utiliser dans le cas de Jacobi
 //  _D=_A.diagonal();   // Diagonale de A
@@ -106,46 +98,54 @@ void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Sp
     //  cout << _D.row() << endl;
     _D.coeffRef(i,i) = _A.coeffRef(i,i);
     _M.coeffRef(i,i)=1/_D.coeffRef(i,i);
+
   }
 
   //Création de E et F
-  for (int i=0 ; i<_A.rows() ; ++i)
-  {
-    for (int j=0 ; j<_A.cols() ; ++j)
-    {
-      if (i<j)
-      {
+  // for (int i=0 ; i<_A.rows() ; ++i)
+  // {
+  //   for (int j=0 ; j<_A.cols() ; ++j)
+  //   {
+  //     if (i<j)
+  //     {
+  //       _E.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire supérieure de A
+  //     //  cout << "E"<<_E.coeffRef(i,j) << endl;
+  //     }
+  //     else if (i>j)
+  //     {
+  //       _F.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire inférieure de A
+  //     //  cout << "F" << _F.coeffRef(i,j) << endl;
+  //     }
+  //   }
+  // }
 
-        _E.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire supérieure de A
-      //  cout << "E"<<_E.coeffRef(i,j) << endl;
-      }
-      else if (i>j)
-      {
-        _F.coeffRef(i,j)=-_A.coeffRef(i,j);     // Partie triangulaire inférieure de A
-      //  cout << "F" << _F.coeffRef(i,j) << endl;
-      }
-    }
-  }
+  // F= - triangle inférieur de A
+_F = - _A.triangularView<StrictlyUpper>();
+// F= - triangle supérieur de A
+_E = - _A.triangularView<StrictlyLower>();
   _N=_E+_F;
 
   _r=_b-_A*_sol0;
+ /*cout << "M" << _M  << endl;
+cout << "N" << _N << endl;
+cout << "_r=" << _r << endl;
+  cout << "rcalc" << _r.norm() << endl;*/
 
-  cout << "F" << _F << endl;
-  cout << "A" << _A << endl;
-  cout << "_r=" << _r << endl;
-
-
-	//	cout <<_r.norm() << " " <<  "1" << endl;>>>>>>> 409d716ac4dbc893d33b79cd73a3ca18ae722669>>>>>>> 53845d8384c4d3c5a7a406de1396d39fa4844188
 }
 
 
 void Jacobi::calcul_sol(Eigen::SparseVector<double>& _r)
 {
+
+
   _sol=_M*_N*_sol+_M*_b;
+  cout << "Sol" << _sol << endl;
 
   _r=_b-_A*_sol;
 //  cout <<_N.norm() << " " <<  "1" << endl;
 //  cout <<_r.norm() << " " <<  "2" << endl;
+//cout << "rcalc" << _r.norm() << endl;
+
 
 }
 
@@ -164,12 +164,13 @@ void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, Spars
     MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
     _r=_b-_A*_sol0;
+      cout << "r" << _r << endl;
 }
 
 void GPO :: calcul_sol(Eigen::SparseVector<double>& _r)
 {
   SparseVector<double> z;
-  //double _alpha;
+  double _alpha;
 
   z = _A *_r;
   _alpha = _r.dot(_r)/z.dot(_r);
@@ -177,82 +178,101 @@ void GPO :: calcul_sol(Eigen::SparseVector<double>& _r)
  _r=_r-_alpha*z;
 
 
+ cout << "z" << z  << endl;
+ cout << "alpha" << _alpha << endl;
+ cout << "_sol" << _sol << endl;
+  cout << "r" << _r << endl;
 }
 
 
 //Méthode du résidu minimum
 
+Residu:: Residu()
+{
+
+}
 
 void Residu::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 {
   MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
-  _r=_b-_A*_sol;
+  _r=_b-_A*_sol0;
 }
 
 void Residu::calcul_sol(Eigen::SparseVector<double>& _r)
 {
   double _alpha;
-
   SparseVector<double> _z;
+
 
 
   _z=_A*_r;
   _alpha=_r.dot(_z)/_z.dot(_z);
   _sol=_sol+_alpha*_r;
   _r=_r-_alpha*_z;
+    cout << "r" << _r << endl;
 }
 
 
 
-/*
+
 //Méthode de GMRes
-GMRes::GMRes(double beta, Eigen::SparseVector<double>& _r)
+GMRes::GMRes(SparseMatrix<double> v_arno, SparseMatrix<double> H)
 {
-  _r=r;
-  _beta=beta;
+  _v_arno=v_arno;
+  _H=H;
 }
-void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A)
+void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
 {
   _r=b-A*_sol0;
-  //_beta = _r.norm(); pas besoin si beta existe déjà dans le main
+
 }
-void GMRes::Arnoldi(SparseVector<double> v, int N, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double>  H)
+void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double>  H)
 {
-  //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
-  v_arno.resize(N,N);
-  H.resize(N,N);
-  //definition des vecteurs et matrices locaux utilisés:
-  SparseVector<double> wj(N); // Produit matrice vecteur A*vj, économiser des opérations
-  SparseVector<double> vi(N); // Vecteur vi, économiser des opérations
-  SparseVector<double> zj(N);
-  SparseVector<double> Sk(N); // Vecteur résultant de la somme
+  // //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
+  // //_v_arno.resize(A.rows(),A.cols());
+  //_H.resize(A.rows(),A.cols());
+  // //definition des vecteurs et matrices locaux utilisés:
+  SparseVector<double> wj(A.rows()); // Produit matrice vecteur A*vj, économiser des opérations
+  SparseVector<double> vi(A.rows()); // Vecteur vi, économiser des opérations
+  SparseVector<double> zj(A.rows());
+  SparseVector<double> Sk(A.rows()); // Vecteur résultant de la somme
+//  MatrixXd H1(A.rows(),A.cols())
+//  double g;
   //Normalisation de v1
-  v_arno.col(1)= (1/v.norm())*v;
-  for (int j=1 ; j < N  ; j++)
-  {
+ v_arno.col(1)= (1/v.norm())*v;
+  for (int j=1 ; j < A.rows() ; j++)
+ {
     wj= A*v_arno.col(j);
     for (int i=1 ; i < j  ; i++)
-    {
-      vi=v_ano.col(i);
-      H(i,j)= wj.dot(vi);
+     {
+      vi=v_arno.col(i);
+       H.coeffRef(i,j)= wj.dot(vi);
     }
-    for (int k=1 ; k < N  ; k++)
+    for (int k=1 ; k < A.rows()  ; k++)
     {
-      Sk = Sk + H(k,j)*v_arno.col(j);
+      Sk = Sk + H.coeffRef(k,j)*v_arno.col(j);
     }
     zj = wj - Sk;
-    H(j+1,j)= zj.norm();
-    if (H(j+1,j)=0)
+    H.coeffRef(j+1,j)= zj.norm();
+
+    if (H.coeffRef(j+1,j)=0)
     {
       break;
-    }
-    v_arno.col(j+1) = zj / H(j+1,j) ;
-  }
+   }
+    v_arno.col(j+1) = zj / H.coeffRef(j+1,j) ;
 }
-void GMRes::calcul_sol(SparseVector<double> b, SparseMatrix<double> A)
-{}
-*/
+}
+
+
+
+void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
+{
+  SparseMatrix<double> Hm, Vm;
+  GMRes::Arnoldi(_r, _A, Vm, Hm);
+
+  
+}
 
 #define _METHODE_RES_CPP
 #endif
