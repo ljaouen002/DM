@@ -7,9 +7,9 @@
 class MethodeRes
 {
   protected:
-    Eigen::SparseMatrix<double> _A, _b;
+    Eigen::SparseMatrix<double> _A;
     // Vecteur initial et vecteur solution
-    Eigen::SparseVector<double> _sol0, _sol;
+    Eigen::SparseVector<double> _sol0, _sol, _b, _r;
     // Écriture du fichier
     std::ofstream _file_out;
     MethodeRes* _methode;
@@ -26,6 +26,7 @@ class MethodeRes
     virtual void calcul_sol(Eigen::SparseVector<double>& _r) =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations, Eigen::SparseVector<double>& _r);
+    void InitialisationMat(std::string name_Matrix, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> b, Eigen::SparseVector<double> sol0, Eigen::SparseVector<double> r);
 };
 
 // Classe fille publique de MethodeRes

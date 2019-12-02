@@ -32,6 +32,41 @@ MethodeRes::MethodeRes()
 MethodeRes::~MethodeRes()
 {}
 
+// Initialisation de la matrices
+void MethodeRes::InitialisationMat(string name_Matrix, SparseMatrix<double> A, SparseVector<double> b, SparseVector<double> sol0, SparseVector<double> r)
+{
+  double taille, nb_non_nul;
+  //ouvrir le fichier nam_Matrix
+  ifstream mon_flux(name_Matrix+".mtx");
+  // recuperer la taille de la matrice et le nombre d'éléments non nuls
+  mon_flux >> taille >> taille >> nb_non_nul;
+  int N;
+  N=int(taille);
+  A.resize(N,N);
+  // indice et valeur pour former la matrice
+  int l, c;
+  double valeur;
+  vector<Triplet<double>> triplets;
+  for (int k=0; k<int(nb_non_nul) ; k++)
+  {
+    mon_flux >> l;
+    mon_flux >> c;
+    mon_flux >> valeur;
+    triplets.push_back({l-1,c-1,valeur});
+  }
+  mon_flux.close();
+  A.setFromTriplets(triplets.begin(),triplets.end());
+
+  // Définition des vecteurs sol0 et b
+	sol0.resize(N) ; b.resize(N) ; r.resize(N);
+	for (int i=0 ; i<sol0.rows() ; i++)
+	{
+		sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+		b.coeffRef(i)=1.;          //Définir un valeur de b
+	}
+}
+
+
 // Initialisation du nom du fichier
 void MethodeRes::InitializeFileName(const string file_name)
 {
@@ -255,7 +290,7 @@ void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix
     zj = wj - Sk;
     H.coeffRef(j+1,j)= zj.norm();
 
-    if (H.coeffRef(j+1,j)=0)
+    if (H.coeffRef(j+1,j)==0)
     {
       break;
    }
@@ -273,11 +308,11 @@ void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
   //Matrice obtenue par décomprisaition QR
   SparseMatrix<double> Qm, Rm;
 
-    Hm.resize(A.rows()+1,A.cols());
-    Vm.resize(A.rows(),A.cols());
+    Hm.resize(_A.rows()+1,_A.cols());
+    Vm.resize(_A.rows(),_A.cols());
 
-    Qm.resize(A.rows()+1,A.cols()+1);
-    Rm.resize(A.rows()+1,A.cols());
+    Qm.resize(_A.rows()+1,_A.cols()+1);
+    Rm.resize(_A.rows()+1,_A.cols());
 
 
 
@@ -286,12 +321,12 @@ void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
 
   //Décompostion QR
   //template<typename _MatrixType , typename _OrderingType >
-  Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct; 	
+  Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct;
   //Pour utiliser cette fonction, doit compresser Hm
   Hm.makeCompressed();
   solver_direct.compute(Hm);
-  Qm=solver.matrixQ();
-  Rm=solver.matrixR();
+  Qm=solver_direct.matrixQ();
+  Rm=solver_direct.matrixR();
 
 
 
