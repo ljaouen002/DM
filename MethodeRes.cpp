@@ -334,6 +334,114 @@ void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
   //   _file_out.open("GMRes"+to_string(_N)+".txt");
   //     _file_out<< k << "  " << beta1 << endl;
   //
+GMRes::GMRes(SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    {
+      _v_arno=v_arno;
+      _H=H;
+    }
+    void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
+    {
+            MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
+
+      _r=_b-_A*_sol0;
+
+    }
+    void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    {
+      // //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
+      //_v_arno.resize(_A.rows(),_A.cols());
+      //_H.resize(A.rows(),A.cols());
+      // //definition des vecteurs et matrices locaux utilisés:
+      SparseVector<double> wj(A.rows()); // Produit matrice vecteur A*vj, économiser des opérations
+      SparseVector<double> vi(A.rows()); // Vecteur vi, économiser des opérations
+      SparseVector<double> zj(A.rows());
+      SparseVector<double> Sk(A.rows()); // Vecteur résultant de la somme
+      // MatrixXd H1(A.rows(),A.cols())
+      // double g;
+      //Normalisation de v1
+      v_arno.col(1)= (1/v.norm())*v;
+      for (int j=1 ; j < A.rows()-1 ; j++)
+      {
+        wj= A*v_arno.col(j);
+        for (int i=1 ; i < j+1 ; i++)
+        {
+          vi=v_arno.col(i);
+          H.coeffRef(i,j)= wj.dot(vi);
+        }
+        for (int k=1 ; k < A.rows() ; k++)
+        {
+          Sk = Sk + H.coeffRef(k,j)*v_arno.col(j);
+        }
+        zj = wj - Sk;
+        H.coeffRef(j+1,j)= zj.norm();
+
+        if (H.coeffRef(j+1,j)==0)
+        {
+          break;
+        }
+        v_arno.col(j+1) = zj / H.coeffRef(j+1,j) ;
+      }
+    }
+
+
+
+
+
+    void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
+    {
+
+      SparseVector<double> e1, y, gm;
+
+      //Premier vecteur de la base canonique
+      e1.resize(_A.rows()+1);
+      e1=0*e1;
+      e1.coeffRef(0)=1;
+
+      //Solution équation normale associée à AVmy
+      y.resize(_A.rows()+1);
+
+      //vecteur gm
+      gm.resize(_A.rows()+1);
+
+      //Matrice obtenue par Arnoldi
+      SparseMatrix<double> Hm, Vm;
+
+      //Matrice obtenue par décomprisaition QR
+      SparseMatrix<double> Qm, Rm;
+
+      Hm.resize(_A.rows()+1,_A.cols());
+      Vm.resize(_A.rows(),_A.cols());
+
+      Qm.resize(_A.rows()+1,_A.cols()+1);
+      Rm.resize(_A.rows()+1,_A.cols());
+
+
+
+      //Application d'arnoldi à r
+      GMRes::Arnoldi(_r, _A, Vm, Hm);
+
+      double beta;
+      beta=_r.norm();
+
+      //Décompostion QR
+      //template<typename _MatrixType , typename _OrderingType >
+      Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct;
+      //Pour utiliser cette fonction, doit compresser Hm
+      Hm.makeCompressed();
+      solver_direct.compute(Hm);
+      Qm=solver_direct.matrixQ();
+      Rm=solver_direct.matrixR();
+
+      gm= beta*Qm.transpose()*e1;
+      //On souhaite que Rmy=gm, on retrouve la forme Ax=b
+      Rm.makeCompressed();
+      solver_direct.compute(Rm);
+      y=solver_direct.solve(gm);
+
+
+      _sol= _sol + Vm*y;
+      _r= beta*e1 -Hm*y;
+      beta=_r.norm();
   //   // Tant que la tolérence n'est pas atteinte ou que le nombre d'itérations maximum n'est pas réalisé
   //   while ((beta1>eps) && (k<kmax+1))
   //   {
@@ -387,10 +495,61 @@ void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
   // }
 
 
+GMRes::GMRes(SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    {
+      _v_arno=v_arno;
+      _H=H;
+    }
+    void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
+    {
+            MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
+
+      _r=_b-_A*_sol0;
+
+    }
+    void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    {
+      // //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
+      //_v_arno.resize(_A.rows(),_A.cols());
+      //_H.resize(A.rows(),A.cols());
+      // //definition des vecteurs et matrices locaux utilisés:
+      SparseVector<double> wj(A.rows()); // Produit matrice vecteur A*vj, économiser des opérations
+      SparseVector<double> vi(A.rows()); // Vecteur vi, économiser des opérations
+      SparseVector<double> zj(A.rows());
+      SparseVector<double> Sk(A.rows()); // Vecteur résultant de la somme
+      // MatrixXd H1(A.rows(),A.cols())
+      // double g;
+      //Normalisation de v1
+      v_arno.col(1)= (1/v.norm())*v;
+      for (int j=1 ; j < A.rows()-1 ; j++)
+      {
+        wj= A*v_arno.col(j);
+        for (int i=1 ; i < j+1 ; i++)
+        {
+          vi=v_arno.col(i);
+          H.coeffRef(i,j)= wj.dot(vi);
+        }
+        for (int k=1 ; k < A.rows() ; k++)
+        {
+          Sk = Sk + H.coeffRef(k,j)*v_arno.col(j);
+        }
+        zj = wj - Sk;
+        H.coeffRef(j+1,j)= zj.norm();
+
+        if (H.coeffRef(j+1,j)==0)
+        {
+          break;
+        }
+        v_arno.col(j+1) = zj / H.coeffRef(j+1,j) ;
+      }
+    }
 
 
-}
-=======
+
+
+
+    void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
+    {
 
       SparseVector<double> e1, y, gm;
 
@@ -438,7 +597,7 @@ void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
       //On souhaite que Rmy=gm, on retrouve la forme Ax=b
       Rm.makeCompressed();
       solver_direct.compute(Rm);
-     cout << solver_direct.solve(gm) << endl;
+      y=solver_direct.solve(gm);
 
 
       _sol= _sol + Vm*y;
