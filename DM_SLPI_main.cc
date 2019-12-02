@@ -34,7 +34,8 @@ int main()
 	switch(userchoicematrice)
 	{
 		case 1: //Matrice avec seulement des 1
-			A.resize(3,3);
+			N=3;
+			A.resize(N,N);
 
 			for (int i=0 ; i<A.rows() ; ++i)
 			{
@@ -43,6 +44,16 @@ int main()
 		  		A.coeffRef(i,j)=1;
 		    }
 		  }
+
+			// Définition des vecteurs sol0 et b
+			sol0.resize(N) ; b.resize(N) ; r.resize(N);
+			for (int i=0 ; i<sol0.rows() ; i++)
+			{
+				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+				b.coeffRef(i)=1.;          //Définir un valeur de b
+		}
+
+			r=b-A*sol0;                 //Initialisation de r
 		break;
 
 
@@ -54,6 +65,16 @@ int main()
 			C = MatrixXd::Random(N,N);     // Matrice random C dense
 			B = C.sparseView();            // Matrice random B sparse
 			A = a*Id+B.transpose()*B;      // Matrice A
+
+			// Définition des vecteurs sol0 et b
+			sol0.resize(N) ; b.resize(N) ; r.resize(N);
+			for (int i=0 ; i<sol0.rows() ; i++)
+			{
+				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+				b.coeffRef(i)=1.;          //Définir un valeur de b
+		}
+
+			r=b-A*sol0;                 //Initialisation de r
 		break;
 
 
@@ -73,17 +94,27 @@ int main()
 			Id.setIdentity();
 		 	// Initialisation du vecteur b
 			A = 3*N*Id+B;
+
+			// Définition des vecteurs sol0 et b
+			sol0.resize(N) ; b.resize(N) ; r.resize(N);
+			for (int i=0 ; i<sol0.rows() ; i++)
+			{
+				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+				b.coeffRef(i)=1.;          //Définir un valeur de b
+			}
+
+			r=b-A*sol0;                 //Initialisation de r
 		break;
 
 		case 4: //BCSSTK18
 			name_Matrix = "BCSSTK18";
-			matrice->InitialisationMat(name_Matrix);
+			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
 
 		case 5: //FS_541_4
 			name_Matrix = "FS_541_4";
-			matrice->InitialisationMat(name_Matrix);
+			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
 
@@ -93,22 +124,13 @@ int main()
 	}
 
 
-	// Définition des vecteurs sol0 et b
-	for (int i=0 ; i<sol0.rows() ; i++)
-	{
-		sol0.coeffRef(i)=1;       //Définir un valeur de sol0
-		b.coeffRef(i)=1;          //Définir un valeur de b
-	}
-
-	r=b-A*sol0;                                //Initialisation de r
-
-
+	// Choix de la méthode de résolution
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la méthode de résolution : " << endl;
 	cout << "1) Jacobi"<< endl;
 	cout << "2) Gradient Pas Optimal" << endl;
 	cout << "3) Résidu Minimum" << endl;
-	//cout << "4) GMRes" << endl;
+	cout << "4) GMRes" << endl;
 	cin >> userchoicemethode;
 
 	MethodeRes* methode(0);

@@ -26,6 +26,7 @@ class MethodeRes
     virtual void calcul_sol(Eigen::SparseVector<double>& _r) =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations, Eigen::SparseVector<double>& _r);
+    void InitialisationMat(std::string name_Matrix, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> b, Eigen::SparseVector<double> sol0, Eigen::SparseVector<double> r);
 };
 
 // Classe fille publique de MethodeRes
