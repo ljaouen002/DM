@@ -19,6 +19,8 @@ int main()
 	string results;
 
 
+//NE PAS SUPPRIMER LES COMMENTAIRES D'INITIALISATION SVP	 
+
 	// for (int i=0 ; i<A.rows() ; ++i)
 	// {
 	//   for (int j=0 ; j<A.cols() ; ++j)
