@@ -7,9 +7,9 @@
 class MethodeRes
 {
   protected:
-    Eigen::SparseMatrix<double> _A, _b;
+    Eigen::SparseMatrix<double> _A;
     // Vecteur initial et vecteur solution
-    Eigen::SparseVector<double> _sol0, _sol;
+    Eigen::SparseVector<double> _sol0, _sol, _b, _r;
     // Écriture du fichier
     std::ofstream _file_out;
     MethodeRes* _methode;
@@ -69,11 +69,13 @@ class Residu : public MethodeRes
 class GMRes : public MethodeRes
 {
   private:
-    Eigen::SparseVector<double> _v_arno;
-    Eigen::SparseVector<double> _H;
+    Eigen::SparseMatrix<double> _Vm;
+    Eigen::SparseMatrix<double> _Hm;
+    //Eigen::SparseVector<double> _y;
+    int _m;
   public:
     //constructeur
-    GMRes(Eigen::SparseMatrix<double> v_arno, Eigen::SparseMatrix<double> H);
+    GMRes(Eigen::SparseMatrix<double> v_arno, Eigen::SparseMatrix<double> H, int m);
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
     void Arnoldi(Eigen::SparseVector<double> v, Eigen::SparseMatrix<double> A, Eigen::SparseMatrix<double> v_arno, Eigen::SparseMatrix<double> H);
     void calcul_sol(Eigen::SparseVector<double>& _r);

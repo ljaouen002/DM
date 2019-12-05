@@ -17,9 +17,6 @@ MethodeRes::MethodeRes()
   // Destructeur par défaut
   MethodeRes::~MethodeRes()
   {}
-
-
-
     // Initialisation de la matrices
     void MethodeRes::InitialisationMat(string name_Matrix, SparseMatrix<double> A, SparseVector<double> b, SparseVector<double> sol0, SparseVector<double> r)
     {
@@ -46,12 +43,12 @@ MethodeRes::MethodeRes()
       A.setFromTriplets(triplets.begin(),triplets.end());
 
       // Définition des vecteurs sol0 et b
-    	sol0.resize(N) ; b.resize(N) ; r.resize(N);
-    	for (int i=0 ; i<sol0.rows() ; i++)
-    	{
-    		sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-    		b.coeffRef(i)=1.;          //Définir un valeur de b
-    	}
+      sol0.resize(N) ; b.resize(N) ; r.resize(N);
+      for (int i=0 ; i<sol0.rows() ; i++)
+      {
+        sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+        b.coeffRef(i)=1.;          //Définir un valeur de b
+      }
     }
 
     // Initialisation du nom du fichier
@@ -85,6 +82,8 @@ MethodeRes::MethodeRes()
 
 
 
+
+
     //Méthode de Jacobi
     //SparseMatrix<double> D, SparseMatrix<double> F, SparseMatrix<double> E,
 
@@ -98,7 +97,6 @@ MethodeRes::MethodeRes()
     }
 
     void Jacobi :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
-
     {
       MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
@@ -156,7 +154,6 @@ MethodeRes::MethodeRes()
 
     }
 
-
     void Jacobi::calcul_sol(Eigen::SparseVector<double>& _r)
     {
 
@@ -174,13 +171,13 @@ MethodeRes::MethodeRes()
 
 
 
+
     //Méthode du GPO
 
     GPO::GPO()
     {
 
     }
-
 
     void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
     {
@@ -206,6 +203,9 @@ MethodeRes::MethodeRes()
       cout << "_sol" << _sol << endl;
       cout << "r" << _r << endl;
     }
+
+
+
 
 
     //Méthode du résidu minimum
@@ -236,23 +236,30 @@ MethodeRes::MethodeRes()
 
 
 
+
+
+
     //Méthode de GMRes
-    GMRes::GMRes(SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    GMRes::GMRes(SparseMatrix<double> Vm, SparseMatrix<double> Hm, int m)
     {
-      _v_arno=v_arno;
-      _H=H;
+      _Vm=Vm;
+      _Hm=Hm;
+      _m=m;
     }
+
+
     void GMRes::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
     {
-            MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
-
+      MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
       _r=_b-_A*_sol0;
 
+
     }
-    void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix<double> v_arno, SparseMatrix<double> H)
+    void GMRes::Arnoldi(SparseVector<double> v, SparseMatrix<double> A, SparseMatrix<double> Vm, SparseMatrix<double> Hm)
     {
-      // //Définition des tailles des matrices H et v_arno, qui deviendront Hm et Vm
-      //_v_arno.resize(_A.rows(),_A.cols());
+
+      // //Définition des tailles des matrices H et _Vm, qui deviendront Hm et Vm
+      //__Vm.resize(_A.rows(),_A.cols());
       //_H.resize(A.rows(),A.cols());
       // //definition des vecteurs et matrices locaux utilisés:
       SparseVector<double> wj(A.rows()); // Produit matrice vecteur A*vj, économiser des opérations
@@ -262,195 +269,245 @@ MethodeRes::MethodeRes()
       // MatrixXd H1(A.rows(),A.cols())
       // double g;
       //Normalisation de v1
-      v_arno.col(1)= (1/v.norm())*v;
-      for (int j=1 ; j < A.rows()-1 ; j++)
-      {
-        wj= A*v_arno.col(j);
-        for (int i=1 ; i < j+1 ; i++)
-        {
-          vi=v_arno.col(i);
-          H.coeffRef(i,j)= wj.dot(vi);
-        }
-        for (int k=1 ; k < A.rows() ; k++)
-        {
-          Sk = Sk + H.coeffRef(k,j)*v_arno.col(j);
-        }
-        zj = wj - Sk;
-        H.coeffRef(j+1,j)= zj.norm();
+        //cout << "A" << A << endl;
+      _Vm.col(0)= v*(1/v.norm());
+      //cout << "_Vm271" << _Vm << endl;
 
-        if (H.coeffRef(j+1,j)==0)
+
+      for (int j=0 ; j < _m ; j++)
+      {
+        //cout << "j" << j <<endl;
+        Sk.setZero();
+        wj= A*_Vm.col(j);
+      //  cout << "wj277" << wj << endl;
+
+        for (int i=0 ; i < j+1 ; i++)
         {
+          //cout << "i" << i <<endl;
+          vi=_Vm.col(i);
+        //  cout << "vi282" << vi << endl;
+          _Hm.coeffRef(i,j)= wj.dot(vi);
+          //cout << "Hij     indice" << i <<j << "   " <<  H.coeffRef(i,j) << endl;
+        }
+
+
+        for (int k=0 ; k < _m ; k++)
+        {
+          Sk = Sk + _Hm.coeffRef(k,j)*_Vm.col(j);
+                      //cout << "Hkj      indice" << k <<j << "   " <<  H.coeffRef(k,j) << endl;
+        //  cout << "Sk       " << k << "    " << Sk << endl;
+        }
+
+
+        zj = wj - Sk;
+        //cout << "zj282" << zj << endl;
+
+        _Hm.coeffRef(j+1,j)= zj.norm();
+        //cout << "Hj+1j      indice" << j+1 <<j << "   " << H.coeffRef(j+1,j) << endl;
+
+        if (_Hm.coeff(j+1,j)< 1e-14)
+        {
+          _Hm.coeffRef(j+1,j)=0;
+          cout << "IF LE COEFF  Hj+1j  EST NUL  " <<  endl;
           break;
         }
-        v_arno.col(j+1) = zj / H.coeffRef(j+1,j) ;
+      //  cout << "Hj+1j      indice" << j+1 <<j << "   " << H.coeffRef(j+1,j) << endl;
+      //  cout << "zjfin" << zj << endl;
+      //  cout << "v dernier col" << _Vm.col(j+1) << endl;
+
+          _Vm.col(j+1) = zj / _Hm.coeffRef(j+1,j) ;
+
+        }
+
+        cout << "_Vm" << _Vm << endl;
+        cout << "H" << _Hm << endl;
+
+
       }
-    }
 
 
 
 
+      void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
+      {
 
-    void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
-    {
+        SparseVector<double> e1, gm;
+        VectorXd y;
 
-      SparseVector<double> e1, y, gm;
+        //Premier vecteur de la base canonique
+        e1.resize(_m+1);
+        e1=0*e1;
+        e1.coeffRef(0)=1;
 
-      //Premier vecteur de la base canonique
-      e1.resize(_A.rows()+1);
-      e1=0*e1;
-      e1.coeffRef(0)=1;
+        //Solution équation normale associée à AVmy
+        y.resize(_m+1);
 
-      //Solution équation normale associée à AVmy
-      y.resize(_A.rows()+1);
+        //vecteur gm
+        gm.resize(_m+1);
 
-      //vecteur gm
-      gm.resize(_A.rows()+1);
-
-      //Matrice obtenue par Arnoldi
-      SparseMatrix<double> Hm, Vm;
-
-      //Matrice obtenue par décomprisaition QR
-      SparseMatrix<double> Qm, Rm;
-
-      Hm.resize(_A.rows()+1,_A.cols());
-      Vm.resize(_A.rows(),_A.cols());
-
-      Qm.resize(_A.rows()+1,_A.cols()+1);
-      Rm.resize(_A.rows()+1,_A.cols());
+        //Matrice obtenue par Arnoldi
+  //      SparseMatrix<double> Hm, Vm;
 
 
 
-      //Application d'arnoldi à r
-      GMRes::Arnoldi(_r, _A, Vm, Hm);
+        // cout << "Hm"<< Hm <<endl;
+        //         cout << "Vm"<< Vm <<endl;
 
-      double beta;
-      beta=_r.norm();
+        //Matrice obtenue par décomprisaition QR
+        SparseMatrix<double> Qm, Rm, AVm;
 
-      //Décompostion QR
-      //template<typename _MatrixType , typename _OrderingType >
-      Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct;
-      //Pour utiliser cette fonction, doit compresser Hm
-      Hm.makeCompressed();
-      solver_direct.compute(Hm);
-      Qm=solver_direct.matrixQ();
-      Rm=solver_direct.matrixR();
-
-      gm= beta*Qm.transpose()*e1;
-      //On souhaite que Rmy=gm, on retrouve la forme Ax=b
-      Rm.makeCompressed();
-      solver_direct.compute(Rm);
-      y=solver_direct.solve(gm);
+        _Hm.resize(_m+1,_m);
+        _Vm.resize(_A.rows(),_m+1);
+        AVm.resize(_A.rows(),_m+1);
+        Qm.resize(_m+1,_m+1);
+        Rm.resize(_m+1,_m);
 
 
-      _sol= _sol + Vm*y;
-      _r= beta*e1 -Hm*y;
-      beta=_r.norm();
+
+        //Application d'arnoldi à r
+        GMRes::Arnoldi(_r, _A, _Vm, _Hm);
+
+        double beta;
+        beta=_r.norm(); //optimisation: à mettre dans initialisation
+        cout << "Hm"<< _Hm <<endl;
+        //Décompostion QR
+        //template<typename _MatrixType , typename _OrderingType >
+        Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct;
+        //Pour utiliser cette fonction, doit compresser Hm
+        _Hm.makeCompressed();
+        solver_direct.compute(_Hm);
+        Qm=solver_direct.matrixQ();
+        Rm=solver_direct.matrixR();
 
 
-      //     // Décompostion QR de Hm
-      //     SparseQR<SparseMatrix<double>,COLAMDOrdering<int>> solver;
-      //     Hm.makeCompressed();
-      //     solver.compute(Hm);
-      //     Qm=solver.matrixQ();
-      //     Rm=solver.matrixR();
-      //     gm=beta1*Qm.transpose()*e1;
-      //     solver.compute(Rm);
-      //     // Résolution de Rm*y=gm
-      //     y=solver.solve(gm);
-      //
-      //     _X=_X+Vm*y;
-      //     // calcul du nouveau résidu
-      //     _r=_r-_A*Vm*y;
+
+        gm= beta*Qm.transpose()*e1;
+        //On souhaite que Rmy=gm, on retrouve la forme Ax=b
 
 
-      // {
-      //   // Création des différentes matrices et vecteurs utiles dans cette méthode
-      //   SparseMatrix<double> Hm,Qm,Rm;
-      //   SparseMatrix<double> Vm;
-      //   VectorXd y,e1,gm;
-      //   SparseVector<double> zj,a,r;
-      //   double beta1;
-      //   int k;
-      //
-      //   // Allocation des tailles des matrices et vecteurs
-      //   r.resize(_N);
-      //   zj.resize(_N);
-      //   a.resize(_N);
-      //   Vm.resize(_N,_m);
-      //   Hm.resize(_m+1,_m);
-      //   Qm.resize(_m+1,_m+1);
-      //   gm.resize(_m+1);
-      //   Rm.resize(_m+1,_m);
-      //   y.resize(_m);
-      //   e1.resize(_m+1);
-      //
-      //   // Création du m-ième vecteur de la base canonique de taille m
-      //   for (int i=1; i<e1.size(); i++)
-      //   {
-      //     e1.coeffRef(i)=0.;
-      //   }
-      //   e1.coeffRef(0)=1.;
-      //
-      //   beta1=_r.norm();
-      //   k=1;
-      //   // Creation et ouverture du fichier GMRES.txt
-      //   _file_out.open("GMRes"+to_string(_N)+".txt");
-      //     _file_out<< k << "  " << beta1 << endl;
-      //
-      //   // Tant que la tolérence n'est pas atteinte ou que le nombre d'itérations maximum n'est pas réalisé
-      //   while ((beta1>eps) && (k<kmax+1))
-      //   {
-      //     // Réalise une itération d'Arnoldi
-      //     r=_r.sparseView();
-      //     Vm.col(0)=r/r.norm();
-      //     for (int j = 0; j < _m-1; j++)
-      //     {
-      //       a.setZero();
-      //       for (int i = 0; i < j+1; i++)
-      //       {
-      //         Hm.coeffRef(i,j)=(_A*Vm.col(j)).dot(Vm.col(i));
-      //         a+=Hm.coeff(i,j)*Vm.col(i);
-      //       }
-      //       zj=(_A*Vm.col(j))-a;
-      //       Hm.coeffRef(j+1,j)=zj.norm();
-      //       if (Hm.coeff(j+1,j)<pow(10,-14))
-      //       {
-      //         Hm.coeffRef(j+1,j)=0;
-      //         break;}
-      //       Vm.col(j+1)=zj/Hm.coeff(j+1,j);
-      //     }
-      //     // Fin de Arnoldi
-      //
-      //     // Décompostion QR de Hm
-      //     SparseQR<SparseMatrix<double>,COLAMDOrdering<int>> solver;
-      //     Hm.makeCompressed();
-      //     solver.compute(Hm);
-      //     Qm=solver.matrixQ();
-      //     Rm=solver.matrixR();
-      //     gm=beta1*Qm.transpose()*e1;
-      //     solver.compute(Rm);
-      //     // Résolution de Rm*y=gm
-      //     y=solver.solve(gm);
-      //
-      //     _X=_X+Vm*y;
-      //     // calcul du nouveau résidu
-      //     _r=_r-_A*Vm*y;
-      //
-      //     beta1=_r.norm();
-      //     k+=1;
-      //
-      //     // écriture dans le fichier
-      //     _file_out<< k << "  " << beta1 << endl;
-      //   }
-      //   _file_out.close();
-      //   if (k>kmax)
-      //     {
-      //       cout << "Tolérance non atteinte" << _r.norm() << endl;
-      //     }
-      // }
+  //       AVm=_A*_Vm;
+//       SimplicialLLT <SparseMatrix<double> > solver;
+      //  solver.compute(AVm);
+        //(solver.solve(_r)).coeffRef(0)=a;
 
 
-    }
 
-    #define _METHODE_RES_CPP
-    #endif
+  //      AVm.makeCompressed();
+  //      solver_direct.compute(AVm);
+    //    y=solver.solve(_r) ;
+
+
+    //    _sol= _sol + _Vm*y;
+  //      _r= _r-_A*_Vm*y;
+      //  beta=_r.norm();
+
+
+        //     // Décompostion QR de Hm
+        //     SparseQR<SparseMatrix<double>,COLAMDOrdering<int>> solver;
+        //     Hm.makeCompressed();
+        //     solver.compute(Hm);
+        //     Qm=solver.matrixQ();
+        //     Rm=solver.matrixR();
+
+        //     gm=beta1*Qm.transpose()*e1;
+        //     solver.compute(Rm);
+        //     // Résolution de Rm*y=gm
+        //     y=solver.solve(gm);
+        //
+        //     _X=_X+Vm*y;
+        //     // calcul du nouveau résidu
+        //     _r=_r-_A*Vm*y;
+
+
+        // {
+        //   // Création des différentes matrices et vecteurs utiles dans cette méthode
+        //   SparseMatrix<double> Hm,Qm,Rm;
+        //   SparseMatrix<double> Vm;
+        //   VectorXd y,e1,gm;
+        //   SparseVector<double> zj,a,r;
+        //   double beta1;
+        //   int k;
+        //
+        //   // Allocation des tailles des matrices et vecteurs
+        //   r.resize(_N);
+        //   zj.resize(_N);
+        //   a.resize(_N);
+        //   Vm.resize(_N,_m);
+        //   Hm.resize(_m+1,_m);
+        //   Qm.resize(_m+1,_m+1);
+        //   gm.resize(_m+1);
+        //   Rm.resize(_m+1,_m);
+        //   y.resize(_m);
+        //   e1.resize(_m+1);
+        //
+        //   // Création du m-ième vecteur de la base canonique de taille m
+        //   for (int i=1; i<e1.size(); i++)
+        //   {
+        //     e1.coeffRef(i)=0.;
+        //   }
+        //   e1.coeffRef(0)=1.;
+        //
+        //   beta1=_r.norm();
+        //   k=1;
+        //   // Creation et ouverture du fichier GMRES.txt
+        //   _file_out.open("GMRes"+to_string(_N)+".txt");
+        //     _file_out<< k << "  " << beta1 << endl;
+        //
+        //   // Tant que la tolérence n'est pas atteinte ou que le nombre d'itérations maximum n'est pas réalisé
+        //   while ((beta1>eps) && (k<kmax+1))
+        //   {
+        //     // Réalise une itération d'Arnoldi
+        //     r=_r.sparseView();
+        //     Vm.col(0)=r/r.norm();
+        //     for (int j = 0; j < _m-1; j++)
+        //     {
+        //       a.setZero();
+        //       for (int i = 0; i < j+1; i++)
+        //       {
+        //         Hm.coeffRef(i,j)=(_A*Vm.col(j)).dot(Vm.col(i));
+        //         a+=Hm.coeff(i,j)*Vm.col(i);
+        //       }
+        //       zj=(_A*Vm.col(j))-a;
+        //       Hm.coeffRef(j+1,j)=zj.norm();
+        //       if (Hm.coeff(j+1,j)<pow(10,-14))
+        //       {
+        //         Hm.coeffRef(j+1,j)=0;
+        //         break;}
+        //       Vm.col(j+1)=zj/Hm.coeff(j+1,j);
+        //     }
+        //     // Fin de Arnoldi
+        //
+        //     // Décompostion QR de Hm
+        //     SparseQR<SparseMatrix<double>,COLAMDOrdering<int>> solver;
+        //     Hm.makeCompressed();
+        //     solver.compute(Hm);
+        //     Qm=solver.matrixQ();
+        //     Rm=solver.matrixR();
+        //     gm=beta1*Qm.transpose()*e1;
+        //     solver.compute(Rm);
+        //     // Résolution de Rm*y=gm
+        //     y=solver.solve(gm);
+        //
+        //     _X=_X+Vm*y;
+        //     // calcul du nouveau résidu
+        //     _r=_r-_A*Vm*y;
+        //
+        //     beta1=_r.norm();
+        //     k+=1;
+        //
+        //     // écriture dans le fichier
+        //     _file_out<< k << "  " << beta1 << endl;
+        //   }
+        //   _file_out.close();
+        //   if (k>kmax)
+        //     {
+        //       cout << "Tolérance non atteinte" << _r.norm() << endl;
+        //     }
+        // }
+
+
+      }
+
+
+      #define _METHODE_RES_CPP
+      #endif

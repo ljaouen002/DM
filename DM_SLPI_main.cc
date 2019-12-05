@@ -10,13 +10,14 @@ using namespace Eigen;
 
 int main()
 {
-	int N, k(1), k_max(10000);
+	int N, k(1), k_max(1);
 	double eps(0.000000001), a(0.1);
 	MatrixXd C, Unit;
 	SparseMatrix<double> Id, A, B, M, N_J, V, H;
 	SparseVector<double> b, sol0, sol, r;
 	int userchoicemethode;
 	int userchoicematrice;
+	int m_GMRes(3);
 	string results, name_Matrix;
 
 	// Choix de la matrice à utiliser
@@ -34,14 +35,14 @@ int main()
 	switch(userchoicematrice)
 	{
 		case 1: //Matrice avec seulement des 1
-			N=3;
+			N=5;
 			A.resize(N,N);
 
 			for (int i=0 ; i<A.rows() ; ++i)
 			{
 				for (int j=0 ; j<A.cols() ; ++j)
 		    {
-		  		A.coeffRef(i,j)=1;
+		  		A.coeffRef(i,j)=i;
 		    }
 		  }
 
@@ -156,7 +157,10 @@ int main()
 		break;
 
 		case 4: //GMRes
-		methode = new GMRes(V, H);
+		//V.resize(N,m_GMRes+1);
+	//	H.resize(m_GMRes+1,m_GMRes);
+
+		methode = new GMRes(V, H, m_GMRes);
 		results = "solution_GMRes.txt";    // Nom du fichier solution
 		break;
 
