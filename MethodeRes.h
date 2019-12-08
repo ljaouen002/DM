@@ -81,5 +81,21 @@ class GMRes : public MethodeRes
     void calcul_sol(Eigen::SparseVector<double>& _r);
 };
 
+
+
+// Classe fille publique de MethodeRes
+class Residu_Precondi : public MethodeRes
+{
+  private:
+    Eigen::SparseMatrix<double> _M;
+    Eigen::SparseVector<double> _q;
+    int _precondi;
+  public:
+    Residu_Precondi(Eigen::SparseMatrix<double> M, Eigen::SparseVector<double> q , int precondi);
+    void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
+    void calcul_sol(Eigen::SparseVector<double>& _r);
+};
+
 #define _METHODE_RES_H
 #endif
+
