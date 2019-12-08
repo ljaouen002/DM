@@ -108,13 +108,13 @@ int main()
 		break;
 
 		case 4: //BCSSTK18
-			name_Matrix = "BCSSTK18";
+			name_Matrix = "bcsstk18";
 			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
 
 		case 5: //FS_541_4
-			name_Matrix = "FS_541_4";
+			name_Matrix = "fs_541_4";
 			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
