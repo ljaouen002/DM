@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <cmath>
+#include <stdlib.h>
 #include "Dense"
 #include "Sparse"
 
@@ -10,14 +11,15 @@ using namespace Eigen;
 
 int main()
 {
-	int N, k(1), k_max(1);
-	double eps(0.000000001), a(0.1);
+	int N, k(1), k_max(300);
+	double eps(0.001), a(0.1);
 	MatrixXd C, Unit;
-	SparseMatrix<double> Id, A, B, M, N_J, V, H;
-	SparseVector<double> b, sol0, sol, r;
+	SparseMatrix<double> Id, A, B, M, N_J, V, H, M_precon;
+	SparseVector<double> b, sol0, sol, r, q;
 	int userchoicemethode;
 	int userchoicematrice;
-	int m_GMRes(3);
+	int precondi;
+	int m_GMRes(10);
 	string results, name_Matrix;
 
 	// Choix de la matrice à utiliser
@@ -35,92 +37,110 @@ int main()
 	switch(userchoicematrice)
 	{
 		case 1: //Matrice avec seulement des 1
-			N=5;
-			A.resize(N,N);
+		N=3;
+		A.resize(N,N);
 
-			for (int i=0 ; i<A.rows() ; ++i)
+		for (int i=0 ; i<A.rows() ; ++i)
+		{
+			for (int j=0 ; j<A.cols() ; ++j)
 			{
-				for (int j=0 ; j<A.cols() ; ++j)
-		    {
-		  		A.coeffRef(i,j)=i;
-		    }
-		  }
-
-			// Définition des vecteurs sol0 et b
-			sol0.resize(N) ; b.resize(N) ; r.resize(N);
-			for (int i=0 ; i<sol0.rows() ; i++)
-			{
-				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-				b.coeffRef(i)=1.;          //Définir un valeur de b
+				A.coeffRef(i,j)=2;
+			}
 		}
 
-			r=b-A*sol0;                 //Initialisation de r
+		// Définition des vecteurs sol0 et b
+		sol0.resize(N) ; b.resize(N) ; r.resize(N);
+		for (int i=0 ; i<sol0.rows() ; i++)
+		{
+			sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+			b.coeffRef(i)=1.;          //Définir un valeur de b
+		}
+
+		r=b-A*sol0;                 //Initialisation de r
 		break;
 
 
 		case 2: //Matrice du DM
-			N=100;
-			Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N);
+		N=100;
+		Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N);
 
-			Id.setIdentity();              // Matrice Identité
-			C = MatrixXd::Random(N,N);     // Matrice random C dense
-			B = C.sparseView();            // Matrice random B sparse
-			A = a*Id+B.transpose()*B;      // Matrice A
+		Id.setIdentity();              // Matrice Identité
 
-			// Définition des vecteurs sol0 et b
-			sol0.resize(N) ; b.resize(N) ; r.resize(N);
-			for (int i=0 ; i<sol0.rows() ; i++)
+		C = MatrixXd::Random(N,N);     // Matrice random C dense
+
+		for (int i=0 ; i<A.rows() ; ++i)
+		{
+			for (int j=0 ; j<A.cols() ; ++j)
 			{
-				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-				b.coeffRef(i)=1.;          //Définir un valeur de b
+				C(i,j)=abs(C(i,j));
+			}
 		}
 
-			r=b-A*sol0;                 //Initialisation de r
+		B = C.sparseView();            // Matrice random B sparse
+		A = a*Id+B.transpose()*B;      // Matrice A
+
+
+		// cout << "Id" << Id << endl;
+		// 									cout << "C" << C << endl;
+		// 			cout << "B" << B << endl;
+		cout << "A" << A << endl;
+
+
+
+		// Définition des vecteurs sol0 et b
+		sol0.resize(N) ; b.resize(N) ; r.resize(N);
+		for (int i=0 ; i<sol0.rows() ; i++)
+		{
+			sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+			b.coeffRef(i)=1.;          //Définir un valeur de b
+		}
+
+		r=b-A*sol0;                 //Initialisation de r
 		break;
 
 
 		case 3:
-			N=100;
-			Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N); Unit.resize(N,N);
+		N=100;
+		Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N); Unit.resize(N,N);
 
-			// C est une matrice de réels aléatoires entre -1 et 1
-		 	C = MatrixXd::Random(N,N);
-		 	// Unit est la matrice dont les coefficients sont tous égaux à 1
-		 	Unit = MatrixXd::Constant(N,N,1.);
-		 	// La matrice C est désormais une matrice de réels aléatoires entre 0 et 1
-		 	C = 1./2.*(Unit+C);
-		 	// B est la représentation creuse de C
-		 	B = C.sparseView();
-		 	// Définition de la matrice identité
-			Id.setIdentity();
-		 	// Initialisation du vecteur b
-			A = 3*N*Id+B;
+		// C est une matrice de réels aléatoires entre -1 et 1
+		C = MatrixXd::Random(N,N);
+		// Unit est la matrice dont les coefficients sont tous égaux à 1
+		Unit = MatrixXd::Constant(N,N,1.);
+		// La matrice C est désormais une matrice de réels aléatoires entre 0 et 1
+		C = 1./2.*(Unit+C);
+		// B est la représentation creuse de C
+		B = C.sparseView();
+		// Définition de la matrice identité
+		Id.setIdentity();
+		// Initialisation du vecteur b
+		A = 3*N*Id+B;
 
-			// Définition des vecteurs sol0 et b
-			sol0.resize(N) ; b.resize(N) ; r.resize(N);
-			for (int i=0 ; i<sol0.rows() ; i++)
-			{
-				sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-				b.coeffRef(i)=1.;          //Définir un valeur de b
-			}
+		// Définition des vecteurs sol0 et b
+		sol0.resize(N) ; b.resize(N) ; r.resize(N);
+		for (int i=0 ; i<sol0.rows() ; i++)
+		{
+			sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
+			b.coeffRef(i)=1.;          //Définir un valeur de b
+		}
 
-			r=b-A*sol0;                 //Initialisation de r
+		r=b-A*sol0;                 //Initialisation de r
 		break;
 
 		case 4: //BCSSTK18
-			name_Matrix = "BCSSTK18";
-			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
+		name_Matrix = "BCSSTK18";
+		matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
 
 		case 5: //FS_541_4
-			name_Matrix = "FS_541_4";
-			matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
+		name_Matrix = "FS_541_4";
+		matrice->InitialisationMat(name_Matrix,A,b,sol0,r);
 		break;
 
 
 		default:
-			cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
+		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
 		exit(0);
 	}
 
@@ -140,6 +160,8 @@ int main()
 	{
 
 		case 1: //Jacobi
+		M.resize(N,N);
+		N_J.resize(N,N);
 		methode = new Jacobi( M, N_J);
 		results = "solution_Jacobi.txt";    // Nom du fichier solution
 		break;
@@ -152,13 +174,34 @@ int main()
 
 
 		case 3: //Résidu
-		methode = new Residu();
-		results = "solution_Residu.txt";    // Nom du fichier solution
+
+		cout << "------------------------------------" << endl;
+		cout << "Avec préconditionnement ? " << endl;
+		cout << "0) Sans préconditionnement" << endl;
+		cout << "1) Jacobi"<< endl;
+		cout << "2) SGS" << endl;
+		cin >> precondi;
+
+		if (precondi == 0)
+		{
+			methode = new Residu();
+			results = "solution_Residu.txt";    // Nom du fichier solution
+		}
+		else if (precondi == 1)
+		{
+			methode = new Residu_Precondi(M_precon, q, precondi);
+			results = "solution_Residu_Precondi_Jacobi.txt";    // Nom du fichier solution
+		}
+		else if (precondi == 2)
+		{
+			methode = new Residu_Precondi(M_precon, q, precondi);
+			results = "solution_Residu_Precondi_SGS.txt";    // Nom du fichier solution
+		}
 		break;
 
 		case 4: //GMRes
-		//V.resize(N,m_GMRes+1);
-	//	H.resize(m_GMRes+1,m_GMRes);
+		V.resize(N,m_GMRes+1);
+		H.resize(m_GMRes+1,m_GMRes);
 
 		methode = new GMRes(V, H, m_GMRes);
 		results = "solution_GMRes.txt";    // Nom du fichier solution
@@ -182,7 +225,7 @@ int main()
 
 		cout << "k=" << k << "\n"<< endl;
 		cout << "=======================" << endl;
-		//cout << "rbouc" <<r.norm() << endl;
+		cout << "norme" <<r.norm() << endl;
 		k+=1;
 	}
 	//cout << _sol << endl;
