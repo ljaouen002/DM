@@ -13,7 +13,7 @@ CXX_FLAGS = $(DEBUG_FLAG)
 PROG = DM
 
 # Les fichiers source à compiler
-SRC = DM_SLPI_main.cc MethodeRes.cpp
+SRC = DM_SLPI_main.cc MethodeRes.cpp ReadMatrix.cpp
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROG) : $(SRC)
