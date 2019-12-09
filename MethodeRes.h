@@ -26,12 +26,10 @@ class MethodeRes
     virtual void calcul_sol(Eigen::SparseVector<double>& _r) =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations, Eigen::SparseVector<double>& _r);
-<<<<<<< HEAD
-    void InitialisationMat(std::string name_Matrix, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> b, Eigen::SparseVector<double> sol0, Eigen::SparseVector<double> r);
-=======
+
 //    void InitialisationMat(int& N,string name_Matrix, SparseMatrix<double>& A);
     // void InitialisationMat(std::string name_Matrix, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> b, Eigen::SparseVector<double> sol0, Eigen::SparseVector<double>& _r);
->>>>>>> 5fedbbc804a503a657d2dbe56b911b65a8bc0ad6
+
 };
 
 // Classe fille publique de MethodeRes
@@ -89,27 +87,24 @@ class GMRes : public MethodeRes
 
 
 // Classe fille publique de MethodeRes
-<<<<<<< HEAD
+
 class Residu_Precondi_gauche : public MethodeRes
-=======
-class Residu_Precondi : public MethodeRes
->>>>>>> 5fedbbc804a503a657d2dbe56b911b65a8bc0ad6
+
+
 {
   private:
     Eigen::SparseMatrix<double> _M;
     Eigen::SparseVector<double> _q;
     int _precondi;
   public:
-<<<<<<< HEAD
+
     Residu_Precondi_gauche(Eigen::SparseMatrix<double> M, Eigen::SparseVector<double> q , int precondi);
-=======
-    Residu_Precondi(Eigen::SparseMatrix<double> M, Eigen::SparseVector<double> q , int precondi);
->>>>>>> 5fedbbc804a503a657d2dbe56b911b65a8bc0ad6
+
+
     void Initialisation(Eigen::SparseVector<double> b, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> sol0 , Eigen::SparseVector<double>& _r, std::string results, MethodeRes* methode);
     void calcul_sol(Eigen::SparseVector<double>& _r);
 };
 
-<<<<<<< HEAD
 
 // Classe fille publique de MethodeRes
 class Residu_Precondi_droite : public MethodeRes
@@ -136,7 +131,6 @@ class Residu_Precondi_auto : public MethodeRes
 };
 
 
-=======
->>>>>>> 5fedbbc804a503a657d2dbe56b911b65a8bc0ad6
+
 #define _METHODE_RES_H
 #endif
