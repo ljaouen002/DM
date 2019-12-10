@@ -18,39 +18,7 @@ MethodeRes::MethodeRes()
   MethodeRes::~MethodeRes()
   {}
 
-    // Initialisation de la matrices
-    void MethodeRes::InitialisationMat(string name_Matrix, SparseMatrix<double> A, SparseVector<double> b, SparseVector<double> sol0, SparseVector<double> r)
-    {
-      double taille, nb_non_nul;
-      //ouvrir le fichier nam_Matrix
-      ifstream mon_flux(name_Matrix+".mtx");
-      // recuperer la taille de la matrice et le nombre d'éléments non nuls
-      mon_flux >> taille >> taille >> nb_non_nul;
-      int N;
-      N=int(taille);
-      A.resize(N,N);
-      // indice et valeur pour former la matrice
-      int l, c;
-      double valeur;
-      vector<Triplet<double>> triplets;
-      for (int k=0; k<int(nb_non_nul) ; k++)
-      {
-        mon_flux >> l;
-        mon_flux >> c;
-        mon_flux >> valeur;
-        triplets.push_back({l-1,c-1,valeur});
-      }
-      mon_flux.close();
-      A.setFromTriplets(triplets.begin(),triplets.end());
 
-      // Définition des vecteurs sol0 et b
-      sol0.resize(N) ; b.resize(N) ; r.resize(N);
-      for (int i=0 ; i<sol0.rows() ; i++)
-      {
-        sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-        b.coeffRef(i)=1.;          //Définir un valeur de b
-      }
-    }
 
 
 
@@ -436,37 +404,46 @@ MethodeRes::MethodeRes()
     {
       MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
-      MatrixXd Md;
-      Md.resize(_A.rows(), _A.cols());
-      _M.resize(_A.rows(), _A.cols());
+      // MatrixXd Md;
+      // Md.resize(_A.rows(), _A.cols());
+      // _M.resize(_A.rows(), _A.cols());
       _r=_b-_A*_sol0;
-
-      for (int i=0 ; i<A.rows() ; ++i)
-      {
-        for (int j=0 ; j<A.cols() ; ++j)
-        {
-          Md(i,j)=A.coeffRef(i,j);
-        }
-      }
-
-      Md= Md.inverse();
-      _M=Md.sparseView();
+      //
+      // for (int i=0 ; i<A.rows() ; ++i)
+      // {
+      //   for (int j=0 ; j<A.cols() ; ++j)
+      //   {
+      //     Md(i,j)=A.coeffRef(i,j);
+      //   }
+      // }
+      //
+      // Md= Md.inverse();
+      // _M=Md.sparseView();
 
 
     }
 
     void Residu_Precondi_auto::calcul_sol(Eigen::SparseVector<double>& _r)
 
+    {
+
+      double _alpha;
+      SparseVector<double> z, w;
       //Résolution
-      z=_M*_r;
+
+      for (int i=0 ; i<300 ; ++i)
+      {
+        z=_A*_r;
+        _alpha=(_r.dot(z))/(z.dot(z));
+        _sol=_sol+_alpha*_r;
+        _r=_r-_alpha*z;
+      }
+
 
       w=_A*z;
-
       _alpha=(_r.dot(w))/(w.dot(w));
       _sol=_sol+_alpha*z;
       _r=_r-_alpha*w;
-
-
     }
 
 
@@ -495,8 +472,6 @@ MethodeRes::MethodeRes()
       SparseVector<double> Sk(A.rows()); // Vecteur résultant de la somme
 
       _Vm.col(0)= v*(1/v.norm());
-
-
 
       for (int j=0 ; j < _m ; j++)
       {
@@ -533,6 +508,53 @@ MethodeRes::MethodeRes()
 
       }
 
+      //  cout << _Vm.col(1).dot(_Vm.col(0)) << endl;
+
+      //Eigen::VectorXd _w;
+      // _Hm.resize(_m+1,_m);
+      // _Vm.resize(_A.rows(),_m+1);
+      // //v=_r;
+      // Eigen :: SparseVector<double> _w;
+      // _w.resize(_A.cols());
+      // _w.setZero();
+      // _Vm.col(0) = v/v.norm();
+      //
+      // //--------------------------------------------------------------------
+      // //------------------------BOUCLE SUR K------------------------
+      // //------------------------------------------------------------------------
+      // for (int k=0; k< _m; k++)
+      // {
+      //   _w = _A*_Vm.col(k);
+      //
+      // //_____________________________________________________
+      // //___________________BOUCLE SUR I_____________________
+      // //____________________________________________________
+      //   for (int i=0; i < k+1; i++)
+      //   {
+      //     _Hm.coeffRef(i,k)=_w.dot(_Vm.col(i));
+      //     _w = _w-_Hm.coeffRef(i,k)*_Vm.col(i);
+      //   }
+      // //----------------------------------------------------------------------------
+      // //-------------------ON SORT DE LA BOUCLE EN I--------------------------------
+      // //-----------------------------------------------------------------------------
+      //
+      //   _Hm.coeffRef(k+1,k) = _w.norm();
+      //
+      //   if (_Hm.coeffRef(k+1,k) ==0)
+      //   {
+      //     break;
+      //   }
+      //
+      //   _Vm.col(k+1)=_w/_Hm.coeffRef(k+1,k);
+      //
+      // }
+      // cout << "_____________Vm__________________ " <<endl;
+      // cout << _Vm << endl;
+      // cout <<"__________hmmmmmmm_____________"<<endl;
+      // cout << _Hm<<endl;
+      // cout << "-------------V0.V1-----------" << endl;
+      // cout << _Vm.col(0).dot(_Vm.col(1)) << endl;
+
 
     }
 
@@ -542,8 +564,11 @@ MethodeRes::MethodeRes()
     void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
     {
 
-      SparseVector<double> e1, y, gm, y2;
+      SparseVector<double> e1, gm, y2;
       double b;
+
+
+      VectorXd y;
 
       //Premier vecteur de la base canonique
       e1.resize(_m+1);
@@ -562,14 +587,15 @@ MethodeRes::MethodeRes()
 
       _Hm.resize(_m+1,_m);
       _Vm.resize(_A.rows(),_m+1);
-      AVm.resize(_A.rows(),_m+1);
+         AVm.resize(_A.rows(),_m+1);
       Qm.resize(_m+1,_m+1);
       Rm.resize(_m+1,_m);
 
-
+      AVm= _A*_Vm;
 
       //Application d'arnoldi à r
       GMRes::Arnoldi(_r, _A, _Vm, _Hm);
+      //  cout << "Hm" << _Hm << endl;
 
       double beta;
       beta=_r.norm();
@@ -583,55 +609,57 @@ MethodeRes::MethodeRes()
       Qm=solver_direct.matrixQ();
       Rm=solver_direct.matrixR();
 
+      //
+      // cout << "Hm" << _Hm << endl;
+      // cout << "prod" << Qm*Rm << endl;
 
-      cout << "Hm" << _Hm << endl;
-      cout << "prod" << Qm*Rm << endl;
-
-      //     gm= beta*Qm.transpose()*e1;
+      //    gm= beta*Qm.transpose()*e1;
       gm= beta*e1;
-      //  On souhaite que Rmy=gm, on retrouve la forme Ax=b
-      //  AVm.makeCompressed();
-      // //  cout << "AVm" << AVm <<endl ;
-      // solver_direct.compute(_Hm);
-      // cout << solver_direct.solve(gm) <<endl ;
+
       //
       y=0*y;
-      //  y.coeffRef(0)=2.65409;
-      //
-      //        cout <<"reso" << gm - _Hm *y <<endl ;
+      //  y.coeffRef(0)=2.65409
 
-      //       AVm=_A*_Vm;
-      //       SimplicialLLT <SparseMatrix<double> > solver;
-      //  solver.compute(AVm);
-      //(solver.solve(_r)).coeffRef(0)=a;
+    //  solver_direct.compute(AVm);
+    //
+
+
+    //  y=  solver_direct.solve(_r);
 
 
       //  Qte1 = _Beta*Qte1;
-      //résolution
-      // y=0*y;
-      //      cout << gm << endl;
-
-      for (int i = 0; i < _m; i++)
-      {
-        b = gm.coeffRef(_m-1-i) -_Hm.row(_m-1-i).dot(y);
-        y.insert(_m-1-i) = b/_Hm.coeffRef(_m-1-i,_m-1-i);
-      }
 
 
-      for (int i = 0; i < _m; i++)
-      {
-        y2.coeffRef(i)=y.coeffRef(i);
-      }
-      y2.coeffRef(_m)=0;
+      //
+      // for (int i = 0; i < _m; i++)
+      // {
+      //   b = gm.coeffRef(_m-1-i) -_Hm.row(_m-1-i).dot(y);
+      //   //cout << i << "H      " << _Hm.row(_m-1-i)  << endl;
+      //   //cout << i << "g      " << gm.coeffRef(_m-1-i)  << endl;
+      // //  cout << i << "b      " << b  << endl;
+      //   y.insert(_m-1-i) = b/_Hm.coeffRef(_m-1-i,_m-1-i);
+      // //  cout << i << y  << endl;
+      // }
+      //
+      //
+      //
+      // for (int i = 0; i < _m; i++)
+      // {
+      //   y2.coeffRef(i)=y.coeffRef(i);
+      // }
+      // y2.coeffRef(_m)=0;
+      //
+      //
+      // y.resize(_m+1);
+      // y=y2;
+      //
+      //
+      // _sol= _sol + _Vm*y;
+      // _r= _r-_A*_Vm*y;
+      // beta=_r.norm();
 
-
-      y.resize(_m+1);
-      y=y2;
-
-      _sol= _sol + _Vm*y;
-      _r= _r-_A*_Vm*y;
-      beta=_r.norm();
-      //    cout << "GMRes" << _r << endl;
+    }
 
     #define _METHODE_RES_CPP
     #endif
+
