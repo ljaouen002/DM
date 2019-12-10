@@ -18,84 +18,6 @@ MethodeRes::MethodeRes()
   MethodeRes::~MethodeRes()
   {}
 
-
-
-
-
-    // void MethodeRes::InitialisationMat(int& N,string name_Matrix, SparseMatrix<double>& _A)
-    // {
-    //   double taille, nb_non_nul;
-    //   //ouvrir le fichier nam_Matrix
-    //   ifstream mon_flux(name_Matrix+".mtx");
-    //   // recuperer la taille de la matrice et le nombre d'éléments non nuls
-    //   string er1, er2, er3,er4, er5;
-    //   mon_flux >> er1 >> er2 >> er3>> er4>> er5;
-    //   //cout << er1 << ","<< er2 << "," << er3<<"," << er4<<"," << er5 << endl;
-    //   mon_flux >> taille >> taille >> nb_non_nul;
-    //
-    //   N=int(taille);
-    //   //cout << N << ","<< taille << "," << nb_non_nul<< endl;
-    //   _A.resize(N,N);
-    //   // indice et valeur pour former la matrice
-    //   int l, c;
-    //   double valeur;
-    //   vector<Triplet<double>> triplets;
-    //   for (int k=0; k<int(nb_non_nul) ; k++)
-    //   {
-    //     mon_flux >> l;
-    //     mon_flux >> c;
-    //     mon_flux >> valeur;
-    //     //cout << l <<","<< valeur << endl;
-    //     triplets.push_back({l-1,c-1,valeur});
-    //   }
-    //   mon_flux.close();
-    //   _A.setFromTriplets(triplets.begin(),triplets.end());
-    // }
-
-    // Initialisation de la matrices
-    // void MethodeRes::InitialisationMat(string name_Matrix, SparseMatrix<double> _A, SparseVector<double> _b, SparseVector<double> _sol0, SparseVector<double>& _r)
-    // {
-    //   double taille, nb_non_nul;
-    //   //ouvrir le fichier nam_Matrix
-    //   ifstream mon_flux(name_Matrix+".mtx");
-    //   // recuperer la taille de la matrice et le nombre d'éléments non nuls
-    //   string er1, er2, er3,er4, er5;
-    //   mon_flux >> er1 >> er2 >> er3>> er4>> er5;
-    //   //cout << er1 << ","<< er2 << "," << er3<<"," << er4<<"," << er5 << endl;
-    //   mon_flux >> taille >> taille >> nb_non_nul;
-    //   int N;
-    //   N=int(taille);
-    //   //cout << N << ","<< taille << "," << nb_non_nul<< endl;
-    //   _A.resize(N,N);
-    //   // indice et valeur pour former la matrice
-    //   int l, c;
-    //   double valeur;
-    //   vector<Triplet<double>> triplets;
-    //   for (int k=0; k<int(nb_non_nul) ; k++)
-    //   {
-    //     mon_flux >> l;
-    //     mon_flux >> c;
-    //     mon_flux >> valeur;
-    //     //cout << l <<","<< valeur << endl;
-    //     triplets.push_back({l-1,c-1,valeur});
-    //   }
-    //   mon_flux.close();
-    //
-    //   _A.setFromTriplets(triplets.begin(),triplets.end());
-    //
-    //
-    //   // Définition des vecteurs sol0 et b
-    //   _sol0.resize(N);
-    //   _b.resize(N);
-    //   cout << "ici"<< endl;
-    //   for (int i=0 ; i<_sol0.rows() ; i++)
-    //   {
-    //     _sol0.coeffRef(i)=1.;       //Définir un valeur de sol0
-    //     _b.coeffRef(i)=1.;          //Définir un valeur de b
-    //   }
-    // }
-
-
     // Initialisation du nom du fichier
     void MethodeRes::InitializeFileName(const string file_name)
     {
@@ -662,4 +584,3 @@ MethodeRes::MethodeRes()
 
     #define _METHODE_RES_CPP
     #endif
-

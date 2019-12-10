@@ -28,6 +28,10 @@ void InitialisationMatrixA(int& N,string name_Matrix, SparseMatrix<double>& A)
     mon_flux >> valeur;
     //cout << l <<","<< valeur << endl;
     triplets.push_back({l-1,c-1,valeur});
+if (er5== "symmetric" && l!=c)
+{
+  triplets.push_back({c-1,l-1,valeur});
+}
   }
   mon_flux.close();
   A.setFromTriplets(triplets.begin(),triplets.end());
