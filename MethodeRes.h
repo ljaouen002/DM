@@ -26,6 +26,7 @@ class MethodeRes
     virtual void calcul_sol(Eigen::SparseVector<double>& _r) =0;
     // Remplissage de la solution
     void SaveSolution(const int nb_iterations, Eigen::SparseVector<double>& _r);
+    
 
 //    void InitialisationMat(int& N,string name_Matrix, SparseMatrix<double>& A);
     // void InitialisationMat(std::string name_Matrix, Eigen::SparseMatrix<double> A, Eigen::SparseVector<double> b, Eigen::SparseVector<double> sol0, Eigen::SparseVector<double>& _r);
@@ -134,3 +135,4 @@ class Residu_Precondi_auto : public MethodeRes
 
 #define _METHODE_RES_H
 #endif
+
