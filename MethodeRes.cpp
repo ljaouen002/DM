@@ -68,7 +68,6 @@ MethodeRes::MethodeRes()
 
       //Définition des matrices D, E et F
       SparseMatrix<double> _D, _F, _E;
-
       _D=0*_A;
       _E=0*_A;
       _F=0*_A;
@@ -93,7 +92,6 @@ MethodeRes::MethodeRes()
 
     void Jacobi::calcul_sol(Eigen::SparseVector<double>& _r)
     {
-      //Résolution de Jacobi
       _sol=_M*_N*_sol+_M*_b;
       _r=_b-_A*_sol;
     }
@@ -110,7 +108,6 @@ MethodeRes::MethodeRes()
     void GPO :: Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
     {
       MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
-
       _r=_b-_A*_sol0;
     }
 
@@ -159,11 +156,15 @@ MethodeRes::MethodeRes()
 
 
 
-    Residu_Precondi_gauche:: Residu_Precondi_gauche(Eigen::SparseMatrix<double> M, Eigen::SparseVector<double> q , int precondi)
+    Residu_Precondi_gauche:: Residu_Precondi_gauche(Eigen::SparseMatrix<double> M, Eigen::SparseMatrix<double> F, Eigen::SparseMatrix<double> E, Eigen::SparseMatrix<double> D, Eigen::SparseMatrix<double> D1, Eigen::SparseVector<double> q , int precondi)
     {
       _M=M;
       _precondi = precondi;
       _q=q;
+      _F=F;
+      _E=E;
+      _D=D;
+      _D1=D1;
     }
 
     void Residu_Precondi_gauche::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
@@ -172,7 +173,13 @@ MethodeRes::MethodeRes()
 
       _M.resize(_A.rows(), _A.cols());
       _q.resize(_A.rows());
+      _F.resize(_A.rows(), _A.cols());
+      _D.resize(_A.rows(), _A.cols());
+      _E.resize(_A.rows(), _A.cols());
+      _D1.resize(_A.rows(), _A.cols());
+
       _r=_b-_A*_sol0;
+
 
       if (_precondi == 1) //Jacobi
       {
@@ -182,6 +189,9 @@ MethodeRes::MethodeRes()
           _M.coeffRef(i,i)=1/_A.coeffRef(i,i);
         }
 
+        //Résolution
+        _q= _M*_r;
+
       }
 
 
@@ -189,39 +199,51 @@ MethodeRes::MethodeRes()
 
       else if (_precondi == 2) //SGS
       {
-        MatrixXd Md;
-        Md.resize(_A.rows(), _A.cols());
 
-        MatrixXd D, E, F, D1;
-        F.resize(_A.rows(), _A.cols());
-        D.resize(_A.rows(), _A.cols());
-        E.resize(_A.rows(), _A.cols());
-        D1.resize(_A.rows(), _A.cols());
+        double diago;
+        SparseMatrix<double> Md;
+        SparseVector<double> q1;
+        Md.resize(_A.rows(), _A.cols());
+        q1.resize(_A.rows());
 
         //Création de D, E et F
         for (int i=0 ; i< (_A.rows()) ; ++i)
         {
-          D(i,i) = _A.coeffRef(i,i);
-          D1(i,i)= 1/ _A.coeffRef(i,i);
+          _D.coeffRef(i,i) = _A.coeffRef(i,i);
+          _D1.coeffRef(i,i)= 1/ _A.coeffRef(i,i);
         }
 
-        F = -_A.triangularView<StrictlyUpper>();
-        E = -_A.triangularView<StrictlyLower>();
+        _F = -_A.triangularView<StrictlyUpper>();
+        _E = -_A.triangularView<StrictlyLower>();
 
-        //Calcul de M
-        Md = (D-E)*D1*(D-F);
 
-        //Inversion de M
-        Md= Md.inverse();
-        _M=Md.sparseView();
+
+        Md = (_D-_E)*_D1;
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = _r.coeffRef(i) - Md.row(i).dot(q1);
+          q1.insert(i) = diago/ Md.coeffRef(i,i);
+        }
+
+
+        Md = (_D-_F);
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = q1.coeffRef(_A.rows() -1 -i) - Md.row(_A.rows() -1 -i).dot(_q);
+          _q.insert(_A.rows() -1 -i) = diago/ Md.coeffRef(_A.rows() -1 -i, _A.rows() -1 -i);
+        }
+
+
+
+
       }
       else
       {
         cout << "Ce préconditionnement n'existe pas!" <<endl ;
       }
 
-      //Résolution
-      _q= _M*_r;
 
     }
 
@@ -232,20 +254,61 @@ MethodeRes::MethodeRes()
 
       w=_A*_q;
 
-      //Résolution
-      z=_M*w;
+      if (_precondi == 1) //Jacobi
+      {
+
+        //Résolution
+        z=_M*w;
+      }
+
+
+      else if (_precondi == 2)
+
+      {
+        SparseMatrix<double> Md;
+        double diago;
+        SparseVector<double> z1;
+
+        z1.resize(_A.rows());
+        z.resize(_A.rows());
+
+
+        Md = (_D-_E)*_D1;
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = w.coeffRef(i) - Md.row(i).dot(z1);
+          z1.insert(i) = diago/ Md.coeffRef(i,i);
+        }
+
+
+        Md = (_D-_F);
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = z1.coeffRef(_A.rows() -1 -i) - Md.row(_A.rows() -1 -i).dot(z);
+          z.insert(_A.rows() -1 -i) = diago/ Md.coeffRef(_A.rows() -1 -i, _A.rows() -1 -i);
+        }
+
+      }
+
 
       _alpha=(_q.dot(z))/(z.dot(z));
+      cout << _alpha <<endl;
       _sol=_sol+_alpha*_q;
       _r=_r-_alpha*w;
       _q=_q- _alpha*z;
     }
 
 
-    Residu_Precondi_droite:: Residu_Precondi_droite(Eigen::SparseMatrix<double> M,  int precondi)
+    Residu_Precondi_droite:: Residu_Precondi_droite(Eigen::SparseMatrix<double> M, Eigen::SparseMatrix<double> F, Eigen::SparseMatrix<double> E, Eigen::SparseMatrix<double> D, Eigen::SparseMatrix<double> D1,  int precondi)
     {
       _M=M;
       _precondi = precondi;
+      _F=F;
+      _E=E;
+      _D=D;
+      _D1=D1;
     }
 
     void Residu_Precondi_droite::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
@@ -264,38 +327,29 @@ MethodeRes::MethodeRes()
         }
       }
 
-
-      else if (_precondi == 4) //SGS
+      else if (_precondi == 4)
       {
-        MatrixXd Md;
-        Md.resize(_A.rows(), _A.cols());
 
-        MatrixXd D, E, F, D1;
-        F.resize(_A.rows(), _A.cols());
-        D.resize(_A.rows(), _A.cols());
-        E.resize(_A.rows(), _A.cols());
-        D1.resize(_A.rows(), _A.cols());
+        _F.resize(_A.rows(), _A.cols());
+        _D.resize(_A.rows(), _A.cols());
+        _E.resize(_A.rows(), _A.cols());
+        _D1.resize(_A.rows(), _A.cols());
+
 
         //Création de D, E et F
         for (int i=0 ; i< (_A.rows()) ; ++i)
         {
-          D(i,i) = _A.coeffRef(i,i);
-          D1(i,i)= 1/ _A.coeffRef(i,i);
+          _D.coeffRef(i,i) = _A.coeffRef(i,i);
+          _D1.coeffRef(i,i)= 1/ _A.coeffRef(i,i);
         }
 
-        F = -_A.triangularView<StrictlyUpper>();
-        E = -_A.triangularView<StrictlyLower>();
-
-        //Calcul de M
-        Md = (D-E)*D1*(D-F);
-
-        Md= Md.inverse();
-        _M=Md.sparseView();
+        _F = -_A.triangularView<StrictlyUpper>();
+        _E = -_A.triangularView<StrictlyLower>();
       }
+
       else
       {
         cout << "Ce préconditionnement n'existe pas!" <<endl ;
-
       }
 
     }
@@ -305,8 +359,45 @@ MethodeRes::MethodeRes()
       double _alpha;
       SparseVector<double> z, w;
 
-      //Résolution
-      z=_M*_r;
+
+      if (_precondi == 3)
+      {
+        z=_M*_r;
+      }
+
+
+
+      else if (_precondi == 4)
+      {
+        SparseMatrix<double> Md;
+        double diago;
+        SparseVector<double> z1;
+
+        z1.resize(_A.rows());
+        z.resize(_A.rows());
+
+
+        Md = (_D-_E)*_D1;
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = _r.coeffRef(i) - Md.row(i).dot(z1);
+          z1.insert(i) = diago/ Md.coeffRef(i,i);
+        }
+
+
+        Md = (_D-_F);
+
+        for (int i = 0; i < _A.rows(); i++)
+        {
+          diago = z1.coeffRef(_A.rows() -1 -i) - Md.row(_A.rows() -1 -i).dot(z);
+          z.insert(_A.rows() -1 -i) = diago/ Md.coeffRef(_A.rows() -1 -i, _A.rows() -1 -i);
+        }
+      }
+
+
+
+
       w=_A*z;
       _alpha=(_r.dot(w))/(w.dot(w));
       _sol=_sol+_alpha*z;
@@ -317,31 +408,16 @@ MethodeRes::MethodeRes()
 
 
 
-    Residu_Precondi_auto:: Residu_Precondi_auto(Eigen::SparseMatrix<double> M)
+    Residu_Precondi_auto:: Residu_Precondi_auto()
     {
-      _M=M;
+
     }
 
     void Residu_Precondi_auto::Initialisation(SparseVector<double> b, SparseMatrix<double> A, SparseVector<double> sol0, Eigen::SparseVector<double>& _r,string results, MethodeRes* methode)
     {
       MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
-      // MatrixXd Md;
-      // Md.resize(_A.rows(), _A.cols());
-      // _M.resize(_A.rows(), _A.cols());
       _r=_b-_A*_sol0;
-      //
-      // for (int i=0 ; i<A.rows() ; ++i)
-      // {
-      //   for (int j=0 ; j<A.cols() ; ++j)
-      //   {
-      //     Md(i,j)=A.coeffRef(i,j);
-      //   }
-      // }
-      //
-      // Md= Md.inverse();
-      // _M=Md.sparseView();
-
 
     }
 
@@ -351,7 +427,6 @@ MethodeRes::MethodeRes()
 
       double _alpha;
       SparseVector<double> z, w;
-      //Résolution
 
       for (int i=0 ; i<300 ; ++i)
       {
@@ -405,16 +480,14 @@ MethodeRes::MethodeRes()
           vi=_Vm.col(i);
           _Hm.coeffRef(i,j)= wj.dot(vi);
 
+
+          for (int k=0 ; k < _m ; k++)
+          {
+            Sk = Sk + _Hm.coeffRef(k,j)*_Vm.col(j);
+          }
+
+          zj = wj - Sk;
         }
-
-
-        for (int k=0 ; k < _m ; k++)
-        {
-          Sk = Sk + _Hm.coeffRef(k,j)*_Vm.col(j);
-        }
-
-
-        zj = wj - Sk;
 
 
         _Hm.coeffRef(j+1,j)= zj.norm();
@@ -429,53 +502,8 @@ MethodeRes::MethodeRes()
         _Vm.col(j+1) = zj / _Hm.coeffRef(j+1,j) ;
 
       }
-
+      //Verification de l'orthogonalité des colonnes de la matrice Vm
       //  cout << _Vm.col(1).dot(_Vm.col(0)) << endl;
-
-      //Eigen::VectorXd _w;
-      // _Hm.resize(_m+1,_m);
-      // _Vm.resize(_A.rows(),_m+1);
-      // //v=_r;
-      // Eigen :: SparseVector<double> _w;
-      // _w.resize(_A.cols());
-      // _w.setZero();
-      // _Vm.col(0) = v/v.norm();
-      //
-      // //--------------------------------------------------------------------
-      // //------------------------BOUCLE SUR K------------------------
-      // //------------------------------------------------------------------------
-      // for (int k=0; k< _m; k++)
-      // {
-      //   _w = _A*_Vm.col(k);
-      //
-      // //_____________________________________________________
-      // //___________________BOUCLE SUR I_____________________
-      // //____________________________________________________
-      //   for (int i=0; i < k+1; i++)
-      //   {
-      //     _Hm.coeffRef(i,k)=_w.dot(_Vm.col(i));
-      //     _w = _w-_Hm.coeffRef(i,k)*_Vm.col(i);
-      //   }
-      // //----------------------------------------------------------------------------
-      // //-------------------ON SORT DE LA BOUCLE EN I--------------------------------
-      // //-----------------------------------------------------------------------------
-      //
-      //   _Hm.coeffRef(k+1,k) = _w.norm();
-      //
-      //   if (_Hm.coeffRef(k+1,k) ==0)
-      //   {
-      //     break;
-      //   }
-      //
-      //   _Vm.col(k+1)=_w/_Hm.coeffRef(k+1,k);
-      //
-      // }
-      // cout << "_____________Vm__________________ " <<endl;
-      // cout << _Vm << endl;
-      // cout <<"__________hmmmmmmm_____________"<<endl;
-      // cout << _Hm<<endl;
-      // cout << "-------------V0.V1-----------" << endl;
-      // cout << _Vm.col(0).dot(_Vm.col(1)) << endl;
 
 
     }
@@ -486,11 +514,10 @@ MethodeRes::MethodeRes()
     void GMRes::calcul_sol(Eigen::SparseVector<double>& _r)
     {
 
-      SparseVector<double> e1, gm, y2;
-      double b;
+      SparseVector<double> e1, gm, y2, y;
+      double diago;
+            double beta;
 
-
-      VectorXd y;
 
       //Premier vecteur de la base canonique
       e1.resize(_m+1);
@@ -505,80 +532,57 @@ MethodeRes::MethodeRes()
       gm.resize(_m+1);
 
       //Matrice obtenue par décomprisaition QR
-      SparseMatrix<double> Qm, Rm, AVm;
-
+      SparseMatrix<double> Qm, Rm;
       _Hm.resize(_m+1,_m);
       _Vm.resize(_A.rows(),_m+1);
-         AVm.resize(_A.rows(),_m+1);
       Qm.resize(_m+1,_m+1);
       Rm.resize(_m+1,_m);
 
-      AVm= _A*_Vm;
+            SparseMatrix<double> Vmy;
+
 
       //Application d'arnoldi à r
       GMRes::Arnoldi(_r, _A, _Vm, _Hm);
-      //  cout << "Hm" << _Hm << endl;
 
-      double beta;
+
       beta=_r.norm();
 
       //Décompostion QR
-      //template<typename _MatrixType , typename _OrderingType >
       Eigen::SparseQR< SparseMatrix<double>, COLAMDOrdering<int> > solver_direct;
-      //Pour utiliser cette fonction, doit compresser Hm
       _Hm.makeCompressed();
       solver_direct.compute(_Hm);
       Qm=solver_direct.matrixQ();
       Rm=solver_direct.matrixR();
 
-      //
-      // cout << "Hm" << _Hm << endl;
-      // cout << "prod" << Qm*Rm << endl;
 
-      //    gm= beta*Qm.transpose()*e1;
-      gm= beta*e1;
+      gm= beta*Qm.transpose()*e1;
 
-      //
+
       y=0*y;
-      //  y.coeffRef(0)=2.65409
 
-    //  solver_direct.compute(AVm);
-    //
-
-
-    //  y=  solver_direct.solve(_r);
-
-
-      //  Qte1 = _Beta*Qte1;
+      for (int i = 0; i < _m; i++)
+      {
+        diago = gm.coeffRef(_m-1-i) - Rm.row(_m-1-i).dot(y);
+        y.insert(_m-1-i) = diago/Rm.coeffRef(_m-1-i,_m-1-i);
+      }
 
 
-      //
-      // for (int i = 0; i < _m; i++)
-      // {
-      //   b = gm.coeffRef(_m-1-i) -_Hm.row(_m-1-i).dot(y);
-      //   //cout << i << "H      " << _Hm.row(_m-1-i)  << endl;
-      //   //cout << i << "g      " << gm.coeffRef(_m-1-i)  << endl;
-      // //  cout << i << "b      " << b  << endl;
-      //   y.insert(_m-1-i) = b/_Hm.coeffRef(_m-1-i,_m-1-i);
-      // //  cout << i << y  << endl;
-      // }
-      //
-      //
-      //
-      // for (int i = 0; i < _m; i++)
-      // {
-      //   y2.coeffRef(i)=y.coeffRef(i);
-      // }
-      // y2.coeffRef(_m)=0;
-      //
-      //
-      // y.resize(_m+1);
-      // y=y2;
-      //
-      //
-      // _sol= _sol + _Vm*y;
-      // _r= _r-_A*_Vm*y;
-      // beta=_r.norm();
+
+      for (int i = 0; i < _m; i++)
+      {
+        y2.coeffRef(i)=y.coeffRef(i);
+      }
+      y2.coeffRef(_m)=0;
+
+
+      y.resize(_m+1);
+      y=y2;
+
+          Vmy = _Vm*y;
+
+      _sol= _sol + Vmy;
+      _r= _r - _A*Vmy;
+      beta=_r.norm();
 
     }
 
