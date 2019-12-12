@@ -12,10 +12,10 @@ using namespace Eigen;
 
 int main()
 {
-	int N, k(1), k_max(20000);
-	double eps(0.01), a(0.1);
+	int N, k(1), k_max;
+	double eps, a(0.1);
 	MatrixXd C, Unit;
-	SparseMatrix<double> Id, A, B, M, N_J, V, H, M_precon;
+	SparseMatrix<double> Id, A, B, M, N_J, V, H, M_precon, D, D1, E, F;
 	SparseVector<double> b, sol0, sol, r, q;
 	int userchoicemethode;
 	int userchoicematrice;
@@ -27,7 +27,7 @@ int main()
 	// Choix de la matrice à utiliser
 	cout << "------------------------------------" << endl;
 	cout << "Choississez la matrice à utiliser : " << endl;
-	cout << "1) Première matrice du DM" << endl;
+	cout << "1) Matrice A random" << endl;
 	cout << "2) Matrice BCSSTK18" << endl;
 	cout << "3) Matrice FS_541_4" << endl;
 	cin >> userchoicematrice;
@@ -37,7 +37,10 @@ int main()
 	switch(userchoicematrice)
 	{
 		case 1: //Première matrice du DM
-		N=100;
+
+		cout << "------------------------------------" << endl;
+		cout << "Quelle taille de matrice voulez vous? " << endl;
+		cin >> N;
 		Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N);
 
 		Id.setIdentity();              // Matrice Identité
@@ -48,20 +51,13 @@ int main()
 		{
 			for (int j=0 ; j<A.cols() ; ++j)
 			{
-				C(i,j)=abs(C(i,j));
+				C(i,j)=abs(C(i,j));				//C est composé de terme compris entre 0 et 1
 			}
 		}
 
 		B = C.sparseView();            // Matrice random B sparse
 		A = a*Id+B.transpose()*B;      // Matrice A
-
-
-		// cout << "Id" << Id << endl;
-		// 									cout << "C" << C << endl;
-		// 			cout << "B" << B << endl;
-		cout << "A" << A << endl;
-
-
+	//	A = a*N*N*N*Id+B.transpose()*B;      // Matrice A
 
 		// Définition des vecteurs sol0 et b
 		sol0.resize(N) ; b.resize(N) ; r.resize(N);
@@ -81,7 +77,7 @@ int main()
 			b.resize(N);
 			for (int i=0 ; i<sol0.rows() ; i++)
 			{
-				sol0.coeffRef(i)=0;       //Définir un valeur de sol0
+				sol0.coeffRef(i)=1;       //Définir un valeur de sol0
 				b.coeffRef(i)=1.;          //Définir un valeur de b
 			}
 		break;
@@ -124,13 +120,14 @@ int main()
 		M.resize(N,N);
 		N_J.resize(N,N);
 		methode = new Jacobi( M, N_J);
-		results = "solution_Jacobi.txt";    // Nom du fichier solution
+		results = "solution_Jacobi_.txt";    // Nom du fichier solution
 		break;
 
 
 		case 2: //GPO
 		methode = new GPO();
-		results = "solution_GPO.txt";           // Nom du fichier solution
+		results = "solution_GPO_BCSS.txt";           // Nom du fichier solution
+	//	results = "solution_GPO.txt";
 		break;
 
 
@@ -149,31 +146,31 @@ int main()
 		if (precondi == 0)
 		{
 			methode = new Residu();
-			results = "solution_Residu.txt";    // Nom du fichier solution
+			results = "solution_Residu_BCSS.txt";    // Nom du fichier solution
 		}
 		else if (precondi == 1)
 		{
-			methode = new Residu_Precondi_gauche(M_precon, q, precondi);
+			methode = new Residu_Precondi_gauche(M_precon, F, E, D, D1, q, precondi);
 			results = "solution_Residu_Precondi_G_Jacobi.txt";    // Nom du fichier solution
 		}
 		else if (precondi == 2)
 		{
-			methode = new Residu_Precondi_gauche(M_precon, q, precondi);
+			methode = new Residu_Precondi_gauche(M_precon, F, E, D, D1, q, precondi);
 			results = "solution_Residu_Precondi_G_SGS.txt";    // Nom du fichier solution
 		}
 		else if (precondi == 3)
 		{
-			methode = new Residu_Precondi_droite(M_precon, precondi);
+			methode = new Residu_Precondi_droite(M_precon, F, E, D, D1, precondi);
 			results = "solution_Residu_Precondi_D_Jacobi.txt";    // Nom du fichier solution
 		}
 		else if (precondi == 4)
 		{
-			methode = new Residu_Precondi_droite(M_precon, precondi);
+			methode = new Residu_Precondi_droite(M_precon, F, E, D, D1, precondi);
 			results = "solution_Residu_Precondi_D_SGS.txt";    // Nom du fichier solution
 		}
 		else if (precondi == 5)
 		{
-			methode = new Residu_Precondi_auto(M_precon);
+			methode = new Residu_Precondi_auto();
 			results = "solution_Residu_Precondi_Auto.txt";    // Nom du fichier solution
 		}
 		break;
@@ -190,6 +187,16 @@ int main()
 		cout << "Ce choix n’est pas possible ! Veuillez recommencer !" << endl;
 		exit(0);
 	}
+
+	cout << "------------------------------------" << endl;
+	cout << "Combien d'itération voulez vous? " << endl;
+	cin >> k_max;
+
+	cout << "------------------------------------" << endl;
+	cout << "Quel seuil de tolérance voulez vous? " << endl;
+	cin >> eps;
+
+
 	// Initialisations
 	methode->Initialisation(b,A,sol0,r,results,methode);
 
@@ -197,17 +204,19 @@ int main()
 	// On sauvegarde la solution
 	methode->SaveSolution(0, r);
 
+
+
 	while (r.norm()>eps && k<=k_max)
 	{
-		methode->calcul_sol(r);   //Appel de la fonction solution
-		methode->SaveSolution(k,r);
+		methode->calcul_sol(r);  			 //Appel de la fonction solution
+		methode->SaveSolution(k,r); 	//Sauvegarde de la norme de r
 
 		cout << "k=" << k << "\n"<< endl;
 		cout << "=======================" << endl;
 		cout << "norme" <<r.norm() << endl;
 		k+=1;
 	}
-	//cout << _sol << endl;
+
 	if (k>k_max)
 	{
 		cout << "Tolérance non atteinte :" << r.norm() << endl;
@@ -216,3 +225,4 @@ int main()
 	delete methode;
 	return 0;
 }
+
