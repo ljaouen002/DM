@@ -65,7 +65,6 @@ MethodeRes::MethodeRes()
     {
       MethodeRes::Initialisation(b,A,sol0,_r,results,methode);
 
-
       //Définition des matrices D, E et F
       SparseMatrix<double> _D, _F, _E;
       _D=0*_A;
@@ -203,6 +202,7 @@ MethodeRes::MethodeRes()
         double diago;
         SparseMatrix<double> Md;
         SparseVector<double> q1;
+
         Md.resize(_A.rows(), _A.cols());
         q1.resize(_A.rows());
 
@@ -217,7 +217,8 @@ MethodeRes::MethodeRes()
         _E = -_A.triangularView<StrictlyLower>();
 
 
-
+        //Résolution de Mq=r;
+        //Résolution de la matrice triangulaire inférieure
         Md = (_D-_E)*_D1;
 
         for (int i = 0; i < _A.rows(); i++)
@@ -226,7 +227,7 @@ MethodeRes::MethodeRes()
           q1.insert(i) = diago/ Md.coeffRef(i,i);
         }
 
-
+        //Résolution de la matrice triangulaire supérieure
         Md = (_D-_F);
 
         for (int i = 0; i < _A.rows(); i++)
@@ -234,8 +235,6 @@ MethodeRes::MethodeRes()
           diago = q1.coeffRef(_A.rows() -1 -i) - Md.row(_A.rows() -1 -i).dot(_q);
           _q.insert(_A.rows() -1 -i) = diago/ Md.coeffRef(_A.rows() -1 -i, _A.rows() -1 -i);
         }
-
-
 
 
       }
@@ -273,6 +272,7 @@ MethodeRes::MethodeRes()
         z.resize(_A.rows());
 
 
+        //Résolution de Mz=w
         Md = (_D-_E)*_D1;
 
         for (int i = 0; i < _A.rows(); i++)
@@ -359,14 +359,14 @@ MethodeRes::MethodeRes()
       double _alpha;
       SparseVector<double> z, w;
 
-
+      //Jacobi
       if (_precondi == 3)
       {
         z=_M*_r;
       }
 
 
-
+      //SGS
       else if (_precondi == 4)
       {
         SparseMatrix<double> Md;
@@ -428,7 +428,8 @@ MethodeRes::MethodeRes()
       double _alpha;
       SparseVector<double> z, w;
 
-      for (int i=0 ; i<300 ; ++i)
+      //Autopréconditionnement par application d'un critère de converge au residu minimum interne
+      for (int i=0 ; i<100 ; ++i)
       {
         z=_A*_r;
         _alpha=(_r.dot(z))/(z.dot(z));
@@ -516,7 +517,7 @@ MethodeRes::MethodeRes()
 
       SparseVector<double> e1, gm, y2, y;
       double diago;
-            double beta;
+      double beta;
 
 
       //Premier vecteur de la base canonique
@@ -538,7 +539,7 @@ MethodeRes::MethodeRes()
       Qm.resize(_m+1,_m+1);
       Rm.resize(_m+1,_m);
 
-            SparseMatrix<double> Vmy;
+      SparseMatrix<double> Vmy;
 
 
       //Application d'arnoldi à r
@@ -555,9 +556,8 @@ MethodeRes::MethodeRes()
       Rm=solver_direct.matrixR();
 
 
+      //Résolution de Rmy=gm
       gm= beta*Qm.transpose()*e1;
-
-
       y=0*y;
 
       for (int i = 0; i < _m; i++)
@@ -567,24 +567,24 @@ MethodeRes::MethodeRes()
       }
 
 
-
+      //Redimensionnement de y
       for (int i = 0; i < _m; i++)
       {
         y2.coeffRef(i)=y.coeffRef(i);
       }
       y2.coeffRef(_m)=0;
-
-
       y.resize(_m+1);
       y=y2;
 
-          Vmy = _Vm*y;
 
+      //Stockage du produit matrice/vecteur
+      Vmy = _Vm*y;
+
+      //Calcul de la solution et du résidu
       _sol= _sol + Vmy;
       _r= _r - _A*Vmy;
-      beta=_r.norm();
-
     }
 
     #define _METHODE_RES_CPP
     #endif
+
