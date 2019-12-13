@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "Dense"
 #include "Sparse"
+#include <chrono>
 
 using namespace std;
 using namespace Eigen;
@@ -14,7 +15,7 @@ int main()
 {
 	int N, k(1), k_max;
 	double eps, a(0.1);
-	MatrixXd C, Unit;
+	MatrixXd C;
 	SparseMatrix<double> Id, A, B, M, N_J, V, H, M_precon, D, D1, E, F;
 	SparseVector<double> b, sol0, sol, r, q;
 	int userchoicemethode;
@@ -43,21 +44,21 @@ int main()
 		cin >> N;
 		Id.resize(N,N) ; C.resize(N,N) ; B.resize(N,N) ; A.resize(N,N);
 
-		Id.setIdentity();              // Matrice Identité
+		Id.setIdentity();              				// Matrice Identité
 
-		C = MatrixXd::Random(N,N);     // Matrice random C dense
+		C = MatrixXd::Random(N,N);    			 	// Matrice random C dense
 
 		for (int i=0 ; i<A.rows() ; ++i)
 		{
 			for (int j=0 ; j<A.cols() ; ++j)
 			{
-				C(i,j)=abs(C(i,j));				//C est composé de terme compris entre 0 et 1
+				C(i,j)=abs(C(i,j));								//C est composé de terme compris entre 0 et 1
 			}
 		}
 
-		B = C.sparseView();            // Matrice random B sparse
-		A = a*Id+B.transpose()*B;      // Matrice A
-	//	A = a*N*N*N*Id+B.transpose()*B;      // Matrice A
+		B = C.sparseView();            				// Matrice random B sparse
+		A = a*Id+B.transpose()*B;     			 	// Matrice A
+//		A = a*N*N*N*Id+B.transpose()*B;     // Matrice A pour l'étude de Jacobi
 
 		// Définition des vecteurs sol0 et b
 		sol0.resize(N) ; b.resize(N) ; r.resize(N);
@@ -72,12 +73,12 @@ int main()
 
 
 		case 2: //BCSSTK18
-			InitialisationMatrixA(N,"bcsstk18",A);
+			InitialisationMatrixA(N,"bcsstk18",A); 
 			sol0.resize(N);
 			b.resize(N);
 			for (int i=0 ; i<sol0.rows() ; i++)
 			{
-				sol0.coeffRef(i)=1;       //Définir un valeur de sol0
+				sol0.coeffRef(i)=1;        //Définir un valeur de sol0
 				b.coeffRef(i)=1.;          //Définir un valeur de b
 			}
 		break;
@@ -89,7 +90,7 @@ int main()
 			b.resize(N);
 			for (int i=0 ; i<sol0.rows() ; i++)
 			{
-				sol0.coeffRef(i)=0;       //Définir un valeur de sol0
+				sol0.coeffRef(i)=1;        //Définir un valeur de sol0
 				b.coeffRef(i)=1.;          //Définir un valeur de b
 			}
 		break;
@@ -120,14 +121,13 @@ int main()
 		M.resize(N,N);
 		N_J.resize(N,N);
 		methode = new Jacobi( M, N_J);
-		results = "solution_Jacobi_.txt";    // Nom du fichier solution
+		results = "solution_Jacobi_BC.txt";
 		break;
 
 
 		case 2: //GPO
 		methode = new GPO();
-		results = "solution_GPO_BCSS.txt";           // Nom du fichier solution
-	//	results = "solution_GPO.txt";
+		results = "solution_GPO_Compa.txt";
 		break;
 
 
@@ -146,32 +146,32 @@ int main()
 		if (precondi == 0)
 		{
 			methode = new Residu();
-			results = "solution_Residu_BCSS.txt";    // Nom du fichier solution
+			results = "solution_Residu.txt";
 		}
 		else if (precondi == 1)
 		{
 			methode = new Residu_Precondi_gauche(M_precon, F, E, D, D1, q, precondi);
-			results = "solution_Residu_Precondi_G_Jacobi.txt";    // Nom du fichier solution
+			results = "solution_Residu_Precondi_G_Jacobi.txt";
 		}
 		else if (precondi == 2)
 		{
 			methode = new Residu_Precondi_gauche(M_precon, F, E, D, D1, q, precondi);
-			results = "solution_Residu_Precondi_G_SGS.txt";    // Nom du fichier solution
+			results = "solution_Residu_Precondi_G_SGS.txt";
 		}
 		else if (precondi == 3)
 		{
 			methode = new Residu_Precondi_droite(M_precon, F, E, D, D1, precondi);
-			results = "solution_Residu_Precondi_D_Jacobi.txt";    // Nom du fichier solution
+			results = "solution_Residu_Precondi_D_Jacobi.txt";
 		}
 		else if (precondi == 4)
 		{
 			methode = new Residu_Precondi_droite(M_precon, F, E, D, D1, precondi);
-			results = "solution_Residu_Precondi_D_SGS.txt";    // Nom du fichier solution
+			results = "solution_Residu_Precondi_D_SGS.txt";
 		}
 		else if (precondi == 5)
 		{
 			methode = new Residu_Precondi_auto();
-			results = "solution_Residu_Precondi_Auto.txt";    // Nom du fichier solution
+			results = "solution_Residu_Precondi_Auto.txt";
 		}
 		break;
 
@@ -180,7 +180,7 @@ int main()
 		H.resize(m_GMRes+1,m_GMRes);
 
 		methode = new GMRes(V, H, m_GMRes);
-		results = "solution_GMRes.txt";    // Nom du fichier solution
+		results = "solution_GMRes_Compa.txt";
 		break;
 
 		default:
@@ -188,14 +188,19 @@ int main()
 		exit(0);
 	}
 
+	//Choix du nombre d'itération maximum
 	cout << "------------------------------------" << endl;
 	cout << "Combien d'itération voulez vous? " << endl;
 	cin >> k_max;
 
+	//Choix du critère de convergence
 	cout << "------------------------------------" << endl;
 	cout << "Quel seuil de tolérance voulez vous? " << endl;
 	cin >> eps;
 
+
+
+auto start = chrono::high_resolution_clock::now();
 
 	// Initialisations
 	methode->Initialisation(b,A,sol0,r,results,methode);
@@ -209,7 +214,7 @@ int main()
 	while (r.norm()>eps && k<=k_max)
 	{
 		methode->calcul_sol(r);  			 //Appel de la fonction solution
-		methode->SaveSolution(k,r); 	//Sauvegarde de la norme de r
+		methode->SaveSolution(k,r);  	 //Sauvegarde de la norme de r
 
 		cout << "k=" << k << "\n"<< endl;
 		cout << "=======================" << endl;
@@ -222,7 +227,14 @@ int main()
 		cout << "Tolérance non atteinte :" << r.norm() << endl;
 	}
 
+	auto finish = chrono::high_resolution_clock::now();
+
+	double t = chrono::duration_cast<chrono::microseconds>(finish-start).count();
+	cout << "Cela a pris "<< t << " microsecondes" << endl;
+
+
 	delete methode;
 	return 0;
 }
+
 
